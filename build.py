@@ -246,13 +246,14 @@ print("identifiant de version :",build_id)
 # scripts en ligne de la page désignés par leur empreinte ; un script glissé dans la page par une faille (attribut onerror, balise
 # injectée) ne s'exécute pas, et les données ne partent que vers le site et le serveur de jeu. frame-ancestors et X-Frame-Options ne
 # valent qu'en en-tête : vercel.json. Les attributs style="" des gabarits demandent 'unsafe-inline' pour les styles (sans risque d'exécution).
+# Sans relais, wss://itty.ws est aussi permis : la liste des salons publics (src/98c-multiplayer.js et 98d-publico.js) y passe.
 inline=re.findall(r"<script>(.*?)</script>",html,re.S)
 if len(inline)<2: raise SystemExit("CSP : scripts en ligne attendus (code du jeu, Vercel Analytics)")
 sha=" ".join("'sha256-"+base64.b64encode(hashlib.sha256(x.encode("utf-8")).digest()).decode("ascii")+"'" for x in inline)
 if relay:
     host=re.match(r"wss?://([^/]+)",relay).group(1); net="https://"+host+" wss://"+host
     peer=""
-else: net="https://*.peerjs.com wss://*.peerjs.com stun: turn:"; peer=" https://cdn.jsdelivr.net/npm/peerjs@1.5.5/"
+else: net="https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:"; peer=" https://cdn.jsdelivr.net/npm/peerjs@1.5.5/"
 csp=("default-src 'self'; script-src 'self' "+sha+peer+"; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
      "font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' "+net+"; "
      "manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'")
