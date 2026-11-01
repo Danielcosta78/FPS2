@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-lzGUD/Uyyg1w/xRtL3+wu1/VhTb1O3kcYMFLvEDK5Ww=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' https://cdn.jsdelivr.net/npm/peerjs@1.5.5/; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3CbsDwv+Pfgr/AIiOFrPoaeL8bwoXV76Z6y/q2orqy4=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' https://cdn.jsdelivr.net/npm/peerjs@1.5.5/; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Riposte">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="cod-relay" content="">
-<meta name="cod-build" content="f4e9bb7743b2">
+<meta name="cod-build" content="4262257ace4a">
 <meta name="menu-music" content="menu-theme.mp3?v=1b342264">
 <title>Riposte: Frontline, FPS gratuit dans le navigateur</title>
 <!-- Aperçu d'un lien partagé (Discord, WhatsApp, réseaux) et adresse de référence : adresse et image posées par build.py (SITE, assets/apercu.jpg).
@@ -9023,7 +9023,10 @@ function publicoChanged(){const mp=PUBLICO.mp,up=!!mp&&mp.status.connected;const
 {const stageBase=netPubStage,syncBase=netPubSync,hostBase=netHost,cfgBase=netMatchCfg,initBase=netInit;netPubStage=()=>{if(netViaServer())return stageBase();const mp=PUBLICO.mp,up=!!mp&&mp.status.connected,rows=[];for(const s of[...PUBLICO.salas.values()].sort((a,b)=>b.j-a.j)){const m=mapById(s.m);rows.push({k:'pick',key:s.c,label:m.name,sub:[MODES[s.o].btn,s.p==='lobby'?publicoT('Salon','Lobby'):publicoT('En partie','In game'),publicoT('Hôte : ','Host: ')+s.n].join(' \u00b7 '),value:s.j+'/'+s.x,art:(m.ok&&MAP_ART[m.id])||'',disabled:s.j>=s.x||NET.role!=='off',pick:()=>{sfxUi('click');netJoinLobby(s.c);}});}
 if(!rows.length){const late=PUBLICO.on&&performance.now()-PUBLICO.since>8000;rows.push({k:'note',text:up?publicoT('Aucun salon public pour le moment. Créez le vôtre, il apparaîtra ici.','No public room yet. Create yours and it will show up here.'):late?publicoT('Liste des salons indisponible pour le moment.','Room list unavailable right now.'):publicoT('Connexion à la liste...','Connecting to the list...')});}
 const online=up?`<span>${esc(publicoT(mp.status.online+' joueur(s) en ligne',mp.status.online+' online'))}</span>`:'';return{head:`<b>${esc(publicoT('Salons publics','Public rooms'))}</b>${online}`,cols:[{rows}]};};netPubSync=()=>{syncBase();PUBLICO.dirty=true;};netHost=(o)=>{const was=NET.role;hostBase(o);if(was==='off'&&NET.role==='host'&&!NET.srv&&!netViaServer())NET.cfg.pub=o&&o.pub?1:0;};netMatchCfg=()=>{const c=cfgBase();c.pubOk=c.pubOk||!netViaServer();return c;};netInit=()=>{initBase();try{if(localStorage.getItem('cod_salon_pub')===null)NETP.vis=1;}catch(e){}};}
-setInterval(publicoTick,1000);addEventListener('pagehide',()=>{try{if(PUBLICO.mp)PUBLICO.mp.disconnect();}catch(e){}});if(!window.WebGLRenderingContext)$('loadMsg').textContent=_t('WebGL est indisponible sur ce navigateur.');else if(!pwaGate(boot))boot();
+setInterval(publicoTick,1000);addEventListener('pagehide',()=>{try{if(PUBLICO.mp)PUBLICO.mp.disconnect();}catch(e){}});{const verdictBase=netdVerdict;netdVerdict=()=>verdictBase().replace(/\s*(?:Backup relay|Relais de secours)\s*:[^.]*\.?/i,'').trim();}
+const LIMPEZA=[{tags:'a, button, span, small, li, p',re:/^(?:privacy|confidentialit)[^\n]{0,30}$/i},{tags:'a, button, span, small, li, p',re:/^(?:source code|code source)$/i},{tags:'a, span, small, li, p, div',re:/^vibe[^\n]{0,60}claude code[^\n]{0,40}bendbs\.?$/i},];function limpezaMenu(){for(const L of LIMPEZA){for(const el of document.body.querySelectorAll(L.tags)){if(el.isConnected&&L.re.test((el.textContent||'').replace(/\s+/g,' ').trim()))el.remove();}}}
+limpezaMenu();{let n=0;const t=setInterval(()=>{limpezaMenu();if(++n>=10)clearInterval(t);},1000);}
+if(!window.WebGLRenderingContext)$('loadMsg').textContent=_t('WebGL est indisponible sur ce navigateur.');else if(!pwaGate(boot))boot();
 </script>
 <!-- Vercel Web Analytics (sans dépendance : le script est servi par Vercel, il échoue sans bruit hors ligne ou en fichier local) -->
 <script>
