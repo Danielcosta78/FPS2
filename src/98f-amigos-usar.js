@@ -11,12 +11,12 @@
   // ----- 2) textos : [francês, inglês] -----
   const TXT = {
     'Tout est débloqué pour cette arme': ['Tout est prêt à utiliser pour cette arme', 'Everything is ready to use for this weapon'],
-    'Les camouflages se débloquent avec le niveau de l'arme.': ['Tous les camouflages sont prêts à utiliser.', 'All camos are ready to use.'],
+    "Les camouflages se débloquent avec le niveau de l'arme.": ['Tous les camouflages sont prêts à utiliser.', 'All camos are ready to use.'],
     ', tous débloqués.': [', tous prêts à utiliser.', ', all ready to use.'],
     'Débloqué : {0}': ['À utiliser : {0}', 'Ready to use: {0}'],
-    'Relevez leurs défis pour les débloquer': ['Choisissez-en une pour l'utiliser', 'Pick one to use it'],
+    'Relevez leurs défis pour les débloquer': ["Choisissez-en une pour l'utiliser", 'Pick one to use it'],
     'Jouer entre amis': ['Jouer entre amis', 'Play with friends'],
-    'Salon privé : on n'entre qu'avec le code': ['Salon privé : on n'entre qu'avec le code', 'Private room: you need the code to join'],
+    "Salon privé : on n'entre qu'avec le code": ["Salon privé : on n'entre qu'avec le code", 'Private room: you need the code to join'],
     'Créer une partie publique': ['Créer une partie publique', 'Create a public match'],
     'Visible dans la liste, tout le monde peut la rejoindre': ['Visible dans la liste, tout le monde peut la rejoindre', 'Listed publicly, anyone can join'],
     'Rejoindre avec un code': ['Rejoindre avec un code', 'Join with a code'],
@@ -45,7 +45,7 @@
     pub.label = _t('Créer une partie publique');
     pub.sub = _t('Visible dans la liste, tout le monde peut la rejoindre');
     pub.run = () => netHost({ pub: 1 });
-    pg.rows.splice(i, 0, { k: 'btn', key: 'friends', label: _t('Jouer entre amis'), sub: _t('Salon privé : on n'entre qu'avec le code'), run: () => netHost({ pub: 0 }), disabled: pub.disabled });
+    pg.rows.splice(i, 0, { k: 'btn', key: 'friends', label: _t('Jouer entre amis'), sub: _t("Salon privé : on n'entre qu'avec le code"), run: () => netHost({ pub: 0 }), disabled: pub.disabled });
     const j = pg.rows.findIndex((r) => r && r.key === 'join');
     if (j >= 0) { pg.rows[j].label = _t('Rejoindre avec un code'); pg.rows[j].sub = _t('Le code donné par un ami'); }
     return pg;
