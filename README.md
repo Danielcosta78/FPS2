@@ -2,6 +2,7 @@
 
 **Riposte: Frontline** is a free first-person shooter played in the browser, on desktop and on phones, in the spirit of modern
 Call of Duty games: https://www.playriposte.com
+https://danielcosta78.github.io/FPS2/dist/riposte-frontline.html
 
 This repository is a snapshot of the game's source code, version 5.6.0. It is updated from time to time, not with every
 release of the game. You can read it,
