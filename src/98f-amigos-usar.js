@@ -45,7 +45,7 @@
     const el = $('playGrid'); if (!el) return;
     const en = LANG === 'en';
     const cards = [
-      ['solo', _t('Solo'), _t('Vous contre des bots, sans connexion. Pour s'entraîner.')],
+      ['solo', _t('Solo'), _t("Vous contre des bots, sans connexion. Pour s'entraîner.")],
       ['public', en ? 'Online' : 'En ligne', en ? 'Play with friends in a private room (code needed), or join public matches.' : 'Jouez avec vos amis dans un salon privé (avec code) ou rejoignez des parties publiques.'],
     ];
     el.innerHTML = cards.map(([k, b, s]) => `<button class="play-card" type="button" data-play="${k}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${PLAY_ICON[k]}"/></svg><b>${b}</b><span>${s}</span></button>`).join('');
