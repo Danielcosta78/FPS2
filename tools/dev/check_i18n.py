@@ -68,10 +68,10 @@ for f in sorted(glob.glob('src/*.js')):
 # texte écrit dans le CSS de shell.html (content: "...") : il doit passer par une variable --t-... posée par le jeu
 for m in re.finditer(r"content:\s*(?!var\()[\"'](?:\s*)([^\"']*[A-Za-zÀ-ÿ]{3,}[^\"']*)[\"']",open('shell.html',encoding='utf-8').read()):
     errs.append(f"texte dans le CSS de shell.html (utiliser var(--t-...), voir src/09e-menus.js) : {m.group(1)!r}")
-# messages d'erreur de l'API (api/_lib/*.js) : chacun a sa version anglaise dans api/_lib/i18n.js (absente de la copie publique du code)
+# messages d'erreur de l'API (backend/_lib/*.js) : chacun a sa version anglaise dans backend/_lib/i18n.js (absente de la copie publique du code)
 def jsstr(x): return K.js_unescape(x)
-api_en=set(jsstr(m.group(1)) for m in re.finditer(r"^  '((?:[^'\\]|\\.)*)':",open('api/_lib/i18n.js',encoding='utf-8').read() if os.path.exists('api/_lib/i18n.js') else '',re.M))
-for f in sorted(glob.glob('api/_lib/*.js')+glob.glob('api/*.js')):
+api_en=set(jsstr(m.group(1)) for m in re.finditer(r"^  '((?:[^'\\]|\\.)*)':",open('backend/_lib/i18n.js',encoding='utf-8').read() if os.path.exists('backend/_lib/i18n.js') else '',re.M))
+for f in sorted(glob.glob('backend/_lib/*.js')+glob.glob('backend/*.js')):
     if f.endswith('i18n.js'): continue
     for m in re.finditer(r"HttpError\(\d+,\s*'((?:[^'\\]|\\.)*)'",open(f,encoding='utf-8').read()):
         k=jsstr(m.group(1))
