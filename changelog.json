@@ -2,12 +2,10 @@
   {
     "version": "5.6.0",
     "date": "2026-11-02",
-    "title": "Bem-vindo",
-    "title_en": "Welcome",
     "changes": [
       {
         "t": "new",
-        "x": "Olá, bem-vindo ao Riposte! Que cada batalha seja inesquecível e cada vitória traga a superação dos teus próprios limites.",
+        "x": "Bonjour, bienvenue sur Riposte ! Que chaque bataille soit inoubliable et que chaque victoire vous rapproche de vos propres limites.",
         "x_en": "Hello, welcome to Riposte! May every battle be unforgettable and every victory bring you closer to overcoming your own limits."
       }
     ]
