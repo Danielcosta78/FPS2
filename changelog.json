@@ -1,13 +1,13 @@
 [
-  {
-    "version": "5.6.0",
-    "date": "2026-11-02",
-    "changes": [
-      {
-        "t": "new",
-        "x": "Bonjour, bienvenue sur Riposte ! Que chaque bataille soit inoubliable et que chaque victoire vous rapproche de vos propres limites.",
-        "x_en": "Hello, welcome to Riposte! May every battle be unforgettable and every victory bring you closer to overcoming your own limits."
-      }
-    ]
-  }
+{
+"version": "5.6.0",
+"date": "2026-11-02",
+"changes": [
+{
+"t": "new",
+"x": "Bonjour et bienvenue sur Riposte. Que chaque partie soit une nouvelle occasion de briller, chaque défi une chance de progresser et chaque victoire une histoire à raconter.",
+"x_en": "Hello and welcome to Riposte. May every match be a new chance to shine, every challenge an opportunity to grow, and every victory a story to tell."
+}
+]
+}
 ]
