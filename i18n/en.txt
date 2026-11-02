@@ -778,7 +778,7 @@ Menu principal ⇒ Main menu
 Classes ⇒ Classes
 Options ⇒ Options
 Jeu, audio, vidéo, commandes ⇒ Game, audio, video, controls
-Nouveautés ⇒ What's new
+Plus ⇒ More
 Confidentialité et conditions ⇒ Privacy and terms
 Code source ⇒ Source code
 Vibe codé avec Claude Code par BenDBS ⇒ Vibe coded with Claude Code by BenDBS
