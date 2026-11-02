@@ -11,14 +11,14 @@ os.chdir(ROOT)
 
 # (nom, expression, conseil)
 SIGNES=[
- ('tiret cadratin ou demi-cadratin', r"[\u2013\u2014\u2015]", "virgule, point ou parenthèses"),
- ('points de suspension en un seul caractère', r"\u2026", "trois points ASCII (...)"),
- ('guillemets ou apostrophe typographiques', r"[\u2018\u2019\u201c\u201d\u00ab\u00bb]", "guillemets droits \" \" et apostrophe droite '"),
- ('flèche', r"[\u2190-\u21ff\u27a1\u2794\u279c\u25b6\u25ba]", "un verbe ou une virgule"),
- ('symbole ou émoji', r"[\u2248\u2260\u00d7\u2713\u2714\u2705\u274c\u2b50\u26a0\u2728\U0001f300-\U0001faff\u2600-\u27bf\ufe0f]", "écrire en lettres (x pour une dimension)"),
+ ('tiret cadratin ou demi-cadratin', r"[–—―]", "virgule, point ou parenthèses"),
+ ('points de suspension en un seul caractère', r"…", "trois points ASCII (...)"),
+ ('guillemets ou apostrophe typographiques', r"[‘’“”«»]", "guillemets droits \" \" et apostrophe droite '"),
+ ('flèche', r"[←-⇿➡➔➜▶►]", "un verbe ou une virgule"),
+ ('symbole ou émoji', r"[≈≠×✓✔✅❌⭐⚠✨\U0001f300-\U0001faff☀-➿️]", "écrire en lettres (x pour une dimension)"),
  ('mise en forme Markdown', r"\*\*|`|^#+\s|^[-*]\s|^---", "du texte simple"),
  ('formule d\'introduction ou de conclusion', r"^Voici\b|^Here (is|are)\b|\bEn résumé\b|\bEn conclusion\b|\bIn (summary|conclusion)\b|\bil est important de noter\b|\bit is (important|worth) (to note|noting)\b", "dire la chose directement"),
- ('\u00ab Ce n\'est pas X, c\'est Y \u00bb', r"\bce n.est pas\b[^.]{0,80}\bc.est\b|\bit.s not\b[^.]{0,80}\bit.s\b|\bnot just\b[^.]{0,60}\bbut\b", "dire seulement Y"),
+ ('« Ce n\'est pas X, c\'est Y »', r"\bce n.est pas\b[^.]{0,80}\bc.est\b|\bit.s not\b[^.]{0,80}\bit.s\b|\bnot just\b[^.]{0,60}\bbut\b", "dire seulement Y"),
  ('mot à la mode', r"\b(plonger? dans|plongez dans|crucial\w*|essentiel(le)?s?|tiss(er|e|ons|ez|ent|ant)|levier\w*|robuste\w*|fluid\w+|seamless\w*|delve\w*|tapestry|leverage\w*|robust|unlock the power|game.?changer|redéfin\w+|incontournable\w*|immersi\w+)\b", "un mot simple et précis"),
 ]
 # Contrôlées seulement sur les textes récents (les anciennes entrées du journal sont de l'histoire)
@@ -28,9 +28,9 @@ def lisibles():
     keys=K.all_keys()
     for k,w in keys.items(): yield w[0],k
     for k in K.shell_keys(): yield 'shell.html',k
-    # messages d'erreur de l'API (api/_lib/i18n.js : français, puis anglais ; absents de la copie publique du code)
-    for m in re.finditer(r"^  '((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)'",open('api/_lib/i18n.js',encoding='utf-8').read() if os.path.exists('api/_lib/i18n.js') else '',re.M):
-        yield 'api/_lib/i18n.js',K.js_unescape(m.group(1)); yield 'api/_lib/i18n.js',K.js_unescape(m.group(2))
+    # messages d'erreur de l'API (backend/_lib/i18n.js : français, puis anglais ; absents de la copie publique du code)
+    for m in re.finditer(r"^  '((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)'",open('backend/_lib/i18n.js',encoding='utf-8').read() if os.path.exists('backend/_lib/i18n.js') else '',re.M):
+        yield 'backend/_lib/i18n.js',K.js_unescape(m.group(1)); yield 'backend/_lib/i18n.js',K.js_unescape(m.group(2))
     en,_=i18n.load_en()
     for k,v in en.items(): yield (keys[k][0] if k in keys else 'shell.html'),v
     # journal : les caractères sont contrôlés partout, le reste (ponctuation, mots) seulement sur l'entrée la plus récente,
