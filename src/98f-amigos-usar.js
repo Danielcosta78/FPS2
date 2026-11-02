@@ -6,6 +6,8 @@
       « Criar partida pública » cria uma sala pública (aparece na lista de salas públicas, qualquer um entra com um toque).
       Dentro da sala deixa de haver o botão Privado/Público : o tipo vem da forma como a sala foi criada.
    2) Armas, camuflagens, classes e tenues já estão todas liberadas (98-livre.js) : os textos que diziam « desbloquear » passam a dizer « usar ».
+   3) Sala : as colunas das equipas ficam fixas (Alpha à esquerda, Bravo à direita). Antes, a minha equipa era sempre a primeira coluna :
+      ao trocar de equipa eu continuava na primeira coluna e só o título mudava, parecia que nada tinha acontecido.
    Carregado depois de todos os outros módulos (ordem alfabética de build.py).
    Para voltar ao jogo anterior : apagar este ficheiro e deixar o build correr de novo.
    ========================================================================== */
@@ -70,4 +72,14 @@
   // sem o botão Privado/Público dentro da sala (98d-publico.js ligava-o) : o tipo é o da criação
   const cfgBase = netMatchCfg;
   netMatchCfg = () => { const c = cfgBase(); if (!netViaServer()) c.pubOk = false; return c; };
+
+  // ----- 3) sala : Alpha sempre à esquerda, Bravo à direita (a troca de equipa passa a ver-se) -----
+  const stageBase = netStage;
+  netStage = () => {
+    const st = stageBase();
+    if (!st || !st.cols || st.cols.length !== 2) return st; // chacun pour soi : uma só coluna
+    const me = NET.players.get(NET.me);
+    if (me && me.t === 1) st.cols = st.cols.slice().reverse(); // a coluna da minha equipa (Bravo) passa para a direita
+    return st;
+  };
 }
