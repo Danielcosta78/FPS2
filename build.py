@@ -184,7 +184,7 @@ html=html.replace("__SITE__",SITE).replace("__APERCU__",apercu)
 # Manifeste de l'application installable (Android : « Ajouter à l'écran d'accueil » ouvre le jeu en plein écran, en paysage, sans barre d'adresse)
 for k in ("maskable-192","maskable-512"):
     if k not in icons: raise SystemExit("icône manquante : assets/icon/"+k+".png")
-json.dump({"id":"/","name":"Riposte: Frontline","short_name":"Riposte","description":"FPS en ligne dans le navigateur : solo contre des bots ou en ligne entre amis.",
+json.dump({"id":"/","name":"Frontline","short_name":"Frontline","description":"Browser-based online FPS: play solo against bots or online with friends.",
     "start_url":"riposte-frontline.html","scope":"./","display":"fullscreen","display_override":["fullscreen","standalone"],"orientation":"landscape","categories":["games"],
     "background_color":"#0E110D","theme_color":"#0E110D","prefer_related_applications":False,
     "icons":[{"src":icons["icon-192"],"sizes":"192x192","type":"image/png","purpose":"any"},{"src":icons["icon-512"],"sizes":"512x512","type":"image/png","purpose":"any"},
