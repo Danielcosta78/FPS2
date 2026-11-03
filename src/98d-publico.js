@@ -39,6 +39,15 @@ function publicoAnunciar(to) {
   mp.send('sala', { c: NET.code, n: NET.nick, m: NET.cfg.map, o: NET.cfg.mode, j: NET.players.size, p: NET.phase, v: NET_PROTO }, to, true);
 }
 function publicoFechar() { const mp = PUBLICO.mp; if (mp && mp.status.connected) mp.send('fecha', {}, undefined, true); }
+/* Botão « Actualiser » : esvazia a lista e volta a ligar o canal ; o publicoTick reabre-o em menos de 1 s e os anfitriões respondem logo (evento 'join') */
+function publicoRefresh() {
+  try {
+    const mp = PUBLICO.mp; if (!mp) return;
+    PUBLICO.salas.clear(); PUBLICO.since = performance.now();
+    mp.disconnect(); PUBLICO.on = false;
+    publicoChanged();
+  } catch (e) { /* ignorado */ }
+}
 
 const publicoHost = () => NET.role === 'host' && NET.joined && !!NET.cfg.pub && !NET.srv && !SRV.on && !netViaServer(); // salon public d'un hôte
 const publicoBrowse = () => UI.screen === 'multi' && !netInLobby() && !netViaServer(); // accueil de l'écran Multijoueur
@@ -80,7 +89,7 @@ function publicoChanged() {
   const stageBase = netPubStage, syncBase = netPubSync, hostBase = netHost, cfgBase = netMatchCfg, initBase = netInit;
   netPubStage = () => {
     if (netViaServer()) return stageBase();
-    const mp = PUBLICO.mp, up = !!mp && mp.status.connected, rows = [];
+    const mp = PUBLICO.mp, up = !!mp && mp.status.connected, rows = [{ k: 'pick', key: 'refresh', label: publicoT('Actualiser', 'Refresh'), sub: publicoT('Chercher les salons à nouveau', 'Search for rooms again'), value: '', art: '', pick: () => { sfxUi('click'); publicoRefresh(); } }];
     for (const s of [...PUBLICO.salas.values()].sort((a, b) => b.j - a.j)) {
       const m = mapById(s.m);
       rows.push({ k: 'pick', key: s.c, label: m.name, sub: [MODES[s.o].btn, s.p === 'lobby' ? publicoT('Salon', 'Lobby') : publicoT('En partie', 'In game'), publicoT('Hôte : ', 'Host: ') + s.n].join(' \u00b7 '),
