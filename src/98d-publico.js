@@ -90,7 +90,7 @@ function publicoChanged() {
   const stageBase = netPubStage, syncBase = netPubSync, hostBase = netHost, cfgBase = netMatchCfg, initBase = netInit;
   netPubStage = () => {
     if (netViaServer()) return stageBase();
-    const mp = PUBLICO.mp, up = !!mp && mp.status.connected, rows = [{ k: 'pick', key: 'refresh', label: publicoT('Actualiser', 'Refresh'), sub: publicoT('Chercher les salons à nouveau', 'Search for rooms again'), value: '', art: '', pick: () => { sfxUi('click'); publicoRefresh(); } }];
+    const mp = PUBLICO.mp, up = !!mp && mp.status.connected, rows = [{ k: 'pick', key: 'refresh', label: publicoT('Actualiser', 'Refresh'), sub: publicoT('Chercher les salons à nouveau', 'Search for rooms again'), value: '', pick: () => { sfxUi('click'); publicoRefresh(); } }];
     for (const s of [...PUBLICO.salas.values()].sort((a, b) => b.j - a.j)) {
       const m = mapById(s.m);
       rows.push({ k: 'pick', key: s.c, label: m.name, sub: [MODES[s.o].btn, s.p === 'lobby' ? publicoT('Salon', 'Lobby') : publicoT('En partie', 'In game'), publicoT('Hôte : ', 'Host: ') + s.n].join(' \u00b7 '),
