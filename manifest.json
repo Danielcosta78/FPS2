@@ -1,0 +1,46 @@
+{
+ "id": "/",
+ "name": "Frontline",
+ "short_name": "Frontline",
+ "description": "Browser-based online FPS: play solo against bots or online with friends.",
+ "start_url": "dist/riposte-frontline.html",
+ "scope": "dist",
+ "display": "fullscreen",
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
+ "orientation": "landscape",
+ "categories": [
+  "games"
+ ],
+ "background_color": "#0E110D",
+ "theme_color": "#0E110D",
+ "prefer_related_applications": false,
+ "icons": [
+  {
+   "src": "icons/icon-192.06921713.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.98d6b94c.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/maskable-192.bdc37157.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "icons/maskable-512.571536d3.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
