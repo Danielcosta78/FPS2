@@ -1,8 +1,8 @@
 {
  "id": "/",
- "name": "Riposte: Frontline",
- "short_name": "Riposte",
- "description": "FPS en ligne dans le navigateur : solo contre des bots ou en ligne entre amis.",
+ "name": "Frontline",
+ "short_name": "Frontline",
+ "description": "Browser-based online FPS: play solo against bots or online with friends.",
  "start_url": "riposte-frontline.html",
  "scope": "./",
  "display": "fullscreen",
