@@ -76,6 +76,7 @@ for f in sorted(glob.glob("assets/vendor/hdri/*.exr")):
 # cuites (anim : assets/anim/clips.bin et clips.json, node tools/dev/anim/cuire.mjs depuis le pack Mixamo hors dépôt, lues par
 # src/06ab-anim.js) et la fanfare de montée de niveau (rankup, assets/rankup.mp3, src/05b-rankup-sound.js). Absent (réseau coupé) : le jeu
 # démarre sans eux, avec ses replis.
+
 grain="assets/arme/surface.webp"
 anim=None
 if os.path.exists("assets/anim/clips.json"):
