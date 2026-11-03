@@ -11,7 +11,7 @@ const I18N_MISS = new Set(); // clés absentes du dictionnaire rencontrées en a
 /* Langue choisie : 'auto', 'en' ou 'fr' (enregistrée avec les réglages) ; la langue effective, LANG, est 'en' ou 'fr' */
 const LANG_PREF = (() => {
   try { const s = JSON.parse(localStorage.getItem('dc_settings') || 'null'); if (s && (s.lang === 'en' || s.lang === 'fr')) return s.lang; } catch (e) { /* ignoré */ }
-  return 'auto';
+  return 'en';
 })();
 const LANG = (() => {
   if (LANG_PREF !== 'auto') return LANG_PREF;
