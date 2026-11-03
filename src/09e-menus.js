@@ -283,7 +283,7 @@ const OPT_TABS = [
     ['select', 'padRun', _t('Course à la manette'), [['click', _t('Appui sur le bâton gauche (L3)')], ['auto', _t('Bâton poussé à fond')]]],
     ['check', 'padVib', _t('Vibrations de la manette')],
     ['head', _t('Interface')],
-    ['select', 'lang', _t('Langue'), [['auto', _t('Automatique')], ['en', 'English'], ['fr', 'Français']], langApply, 'menu'],
+    ['select', 'lang', _t('Langue'), [['en', 'English'], ['fr', 'Français']], langApply, 'menu'],
     ['check', 'allyMarks', _t('Marqueurs d\u0027alliés (au-dessus de leur tête)')],
     ['check', 'nadeArc', _t('Trajectoire des grenades (en tenant une grenade)')],
     ['select', 'hudScale', _t('Taille de l\u0027interface en jeu'), [['0.85', '85' + PCT], ['1', '100' + PCT], ['1.15', '115' + PCT], ['1.3', '130' + PCT]], null, 'desk'], // --hud-k (updateHud) ; au doigt, le HUD suit la hauteur de l'écran
