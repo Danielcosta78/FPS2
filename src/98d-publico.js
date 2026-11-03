@@ -7,6 +7,7 @@
    Avec un serveur de jeu (netViaServer), rien ne change : sa liste fait foi.
    Pour revenir au jeu d'origine : supprimer 98c et 98d, et retirer wss://itty.ws de la CSP de build.py.
    ========================================================================== */
+
 const PUBLICO = { mp: null, on: false, since: 0, salas: new Map(), anun: false, anunT: 0, dirty: false, sig: '' };
 const PUBLICO_TTL = 14000, PUBLICO_MAX = 60;
 const publicoT = (fr, en) => (LANG === 'fr' ? fr : en); // textes de la liste : français et anglais
