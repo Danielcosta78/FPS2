@@ -2,6 +2,7 @@
 # Les clés sont les textes passés à _t() dans src/ et les textes de shell.html. « = » : identique en anglais.
 # Un contrôle : python3 tools/dev/check_i18n.py (clés manquantes, inutilisées, textes français non enveloppés).
 
+
 # 02-map.js
 Village de ruelles ⇒ Alley village
 Un village écrasé de soleil où il ne se passe jamais rien. Sauf aujourd'hui. ⇒ A sun-baked village where nothing ever happens. Except today.
