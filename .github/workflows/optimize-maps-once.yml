@@ -1,6 +1,8 @@
 name: Optimize maps once
+
 on:
   workflow_dispatch:
+
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -10,75 +12,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: V2
-      - name: Fix No thanks enabling toggles
+      - name: Patch core defaults
         run: |
           python3 << 'PY'
           from pathlib import Path
-
-          # 1) Settings defaults: rays/grass/dynres false (safer; user can enable)
           p = Path("src/01-core.js")
           t = p.read_text(encoding="utf-8")
-          t2 = t.replace(
-              "quality: 'auto', dynres: true, eco: null, fpsMax: '0', perf: false, ao: false, rays: true, grass: true,",
-              "quality: 'auto', dynres: false, eco: null, fpsMax: '0', perf: false, ao: false, rays: false, grass: false,",
-              1,
-          )
-          if t2 == t:
-              print("MISS Settings defaults (maybe already false)")
+          a = "quality: 'auto', dynres: true, eco: null, fpsMax: '0', perf: false, ao: false, rays: true, grass: true,"
+          b = "quality: 'auto', dynres: false, eco: null, fpsMax: '0', perf: false, ao: false, rays: false, grass: false,"
+          if a in t:
+              t = t.replace(a, b, 1)
+              print("defaults ok")
           else:
-              t = t2
-              print("OK Settings defaults rays/grass/dynres false")
-
-          # 2) While eco is on at boot, mirror ECO_GFX into Settings so No thanks does not resurrect true
+              print("defaults skip", "dynres: false" in t and "rays: false" in t)
           needle = "if (Settings.eco !== true && Settings.eco !== false) { Settings.eco = COARSE; Settings.ecoAsk = COARSE; }"
-          insert = needle + "\nif (Settings.eco) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }"
-          if "if (Settings.eco) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }" in t:
-              print("eco mirror already present")
-          elif needle not in t:
-              print("MISS eco init")
+          mirror = "if (Settings.eco) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }"
+          if mirror not in t and needle in t:
+              t = t.replace(needle, needle + "\n" + mirror, 1)
+              print("mirror ok")
+          elif mirror in t:
+              print("mirror exists")
           else:
-              t = t.replace(needle, insert, 1)
-              print("OK eco mirrors into Settings")
-
+              print("mirror miss")
           p.write_text(t, encoding="utf-8")
-
-          # 3) ecoClose: always force off when declining (any device)
-          p2 = Path("src/09zl-economie.js")
-          t2 = p2.read_text(encoding="utf-8")
-          old = """const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;
-  if (!on && typeof COARSE !== 'undefined' && COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
-  saveSettings(); syncOptions(); if (was !== on) ecoApply();"""
-          new = """const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;
-  /* Non merci : garder les mêmes coupures que l'éco (sinon Settings.rays/grass/dynres restaient true et s'allumaient) */
-  if (!on) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
-  saveSettings(); syncOptions(); if (was !== on) ecoApply();"""
-          if old not in t2:
-              # try without prior COARSE block
-              old2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false; saveSettings(); syncOptions(); if (was !== on) ecoApply();"
-              new2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;\n  if (!on) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }\n  saveSettings(); syncOptions(); if (was !== on) ecoApply();"
-              if old2 in t2:
-                  t2 = t2.replace(old2, new2, 1)
-                  print("OK ecoClose (simple)")
-              else:
-                  print("MISS ecoClose")
-                  print(repr(t2[t2.find("Settings.eco = on"):t2.find("Settings.eco = on")+200]))
-          else:
-              t2 = t2.replace(old, new, 1)
-              print("OK ecoClose (force off on decline)")
-          p2.write_text(t2, encoding="utf-8")
-
-          text = Path("src/09zl-economie.js").read_text(encoding="utf-8")
-          assert "if (!on) { Settings.ao = false" in text
-          print("DONE")
           PY
-      - name: Commit if changed
+      - name: Commit
         run: |
           git config user.name "Danny78"
           git config user.email "danielmendesdacosta78@gmail.com"
-          git add src/01-core.js src/09zl-economie.js
-          if git diff --staged --quiet; then
-            echo "Nada a commitar"
-          else
-            git commit -m "V2: Non merci não reativa ao/rays/grass/dynres; defaults false"
-            git push origin HEAD:V2
-          fi
+          git add src/01-core.js
+          if git diff --staged --quiet; then echo none; else git commit -m "V2: defaults rays/grass/dynres false; eco mirror into Settings" && git push origin HEAD:V2; fi
