@@ -79,6 +79,10 @@ function gfxSet(k) {
 }
 if (!(Settings.tpSens > 0)) Settings.tpSens = Settings.sens; // sensibilité du pavé tactile (09qe-pavetactile.js) : celle de la souris au départ, indépendante ensuite
 function saveSettings() { try { localStorage.setItem('dc_settings', JSON.stringify(Settings)); } catch (e) { /* ignoré */ } }
+/* Téléphone : une fois (sv < 9), AO / rayons / herbe / rés. dynamique restent coupés même si d'anciens réglages les avaient allumés */
+if (COARSE && Settings.sv < 9) {
+  Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; Settings.sv = 9; saveSettings();
+}
 /* Mode graphique économique (Options, Vidéo ; activé tout seul après une perte du contexte WebGL, voir 01a-gpu.js) : profil Basse allégé (ombres 512, pas d'éclairs
    de tir, rendu plus petit), textures réduites, pas de pré-passe de profondeur. Lu une fois au chargement : le changement relance le jeu. */
 /* Identifiant du build en cours (balise cod-build, écrite par build.py) */

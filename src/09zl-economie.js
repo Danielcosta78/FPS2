@@ -16,7 +16,9 @@ function ecoAsk() {
 function ecoClose(on) {
   const el = $('ecoAsk'); if (el.classList.contains('hidden')) return;
   el.classList.add('hidden'); sfxUi('click');
-  const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false; saveSettings(); syncOptions(); if (was !== on) ecoApply();
+  const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;
+  if (!on && typeof COARSE !== 'undefined' && COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
+  saveSettings(); syncOptions(); if (was !== on) ecoApply();
   const f = el._from; el._from = null; if (f && f.isConnected && f.focus && lmWantFocus()) f.focus({ preventScroll: true });
 }
 /* Économie d'énergie activée ou coupée : la qualité en vigueur (gfxSet) change, le mode automatique repart de son échelon de départ ;
