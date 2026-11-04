@@ -10,39 +10,89 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: V2
-      - name: Apply grass range 65%
+      - name: Apply shadow MSAA plants
         run: |
           python3 << 'PY'
           from pathlib import Path
+
+          # --- 01-core.js: QUALITY msaa + shadow (+ detail um pouco mais perto para plantas cls2) ---
           p = Path("src/01-core.js")
           t = p.read_text(encoding="utf-8")
           reps = [
-              ("grass: [0.55, 22, 8]", "grass: [0.55, 14, 5]"),
-              ("grass: [0.45, 18, 7]", "grass: [0.45, 12, 5]"),
-              ("grass: [0.35, 15, 6]", "grass: [0.35, 10, 4]"),
-              ("grass: [0.3, 12, 5]", "grass: [0.3, 8, 3]"),
+              # high: msaa 4->2, shadow 2048->1536, detail 55->45
+              (
+                  "high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 4, shadow: 2048, bloom: true, rays: true, lights: 4, lodPx: 110, detail: 55, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] }",
+                  "high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 2, shadow: 1536, bloom: true, rays: true, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] }",
+              ),
+              # medium: msaa 4->2, shadow 1536->1024, detail 45->36
+              (
+                  "medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 4, shadow: 1536, bloom: true, rays: true, lights: 4, lodPx: 140, detail: 45, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] }",
+                  "medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 2, shadow: 1024, bloom: true, rays: true, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] }",
+              ),
+              # medium2: shadow 1536->1024, detail 38->30
+              (
+                  "medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1536, bloom: true, rays: true, lights: 3, lodPx: 150, detail: 38, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] }",
+                  "medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1024, bloom: true, rays: true, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] }",
+              ),
+              # low: detail 28->22
+              (
+                  "low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.55, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 28, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 8, 3], lean: true }",
+                  "low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.55, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 22, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 8, 3], lean: true }",
+              ),
           ]
-          t2 = t
           for a, b in reps:
-              if a not in t2:
-                  print(f"nao encontrado: {a}")
+              if a not in t:
+                  print("core MISS:", a[:60])
               else:
-                  t2 = t2.replace(a, b, 1)
-                  print(f"ok: {a} -> {b}")
-          if t2 == t:
-              print("sem alteracoes")
+                  t = t.replace(a, b, 1)
+                  print("core OK:", b[b.find("msaa"):b.find("msaa")+40] if "msaa" in b else b[:50])
+          p.write_text(t, encoding="utf-8")
+
+          # --- 02p-plantes.js: menos cartas de folhas nas arvores (~42% menos) ---
+          p = Path("src/02p-plantes.js")
+          t = p.read_text(encoding="utf-8")
+          old = "const n = o.n || Math.round((70 + rr * rr * 8) * (lod ? 0.45 : 0.95))"
+          new = "const n = o.n || Math.round((70 + rr * rr * 8) * (lod ? 0.28 : 0.55))"
+          if old not in t:
+              print("plantes MISS tree n")
           else:
-              p.write_text(t2, encoding="utf-8")
-              print("QUALITY grass range atualizado (65%)")
+              t = t.replace(old, new, 1)
+              print("plantes OK tree leaf cards")
+          p.write_text(t, encoding="utf-8")
+
+          # --- 02h-nature.js: menos palmes (default e lite) ---
+          p = Path("src/02h-nature.js")
+          t = p.read_text(encoding="utf-8")
+          old = "const n = Math.max(6, Math.round(S.n * (lite ? 0.72 : 1) * Math.min(1, 0.5 + sc * 0.5)))"
+          new = "const n = Math.max(6, Math.round(S.n * (lite ? 0.55 : 0.72) * Math.min(1, 0.5 + sc * 0.5)))"
+          if old not in t:
+              print("nature MISS palm n")
+          else:
+              t = t.replace(old, new, 1)
+              print("nature OK palm count")
+          p.write_text(t, encoding="utf-8")
+
+          # --- 02n-flore.js: LOD vento/folhagem mais perto (38-70 -> 22-42) ---
+          p = Path("src/02n-flore.js")
+          t = p.read_text(encoding="utf-8")
+          old = "float lod = 1.0 - smoothstep(38.0, 70.0, distance(wp, cameraPosition));"
+          new = "float lod = 1.0 - smoothstep(22.0, 42.0, distance(wp, cameraPosition));"
+          if old not in t:
+              print("flore MISS lod")
+          else:
+              t = t.replace(old, new, 1)
+              print("flore OK lod distances")
+          p.write_text(t, encoding="utf-8")
+          print("DONE")
           PY
       - name: Commit if changed
         run: |
           git config user.name "Danny78"
           git config user.email "danielmendesdacosta78@gmail.com"
-          git add src/01-core.js
+          git add src/01-core.js src/02p-plantes.js src/02h-nature.js src/02n-flore.js
           if git diff --staged --quiet; then
             echo "Nada a commitar"
           else
-            git commit -m "Erva: alcance a 65% (high 14m, medium 12m, low 8m)"
+            git commit -m "Perf V2: sombras/MSAA menores, menos folhas arvores/palmas, LOD flora mais perto"
             git push origin HEAD:V2
           fi
