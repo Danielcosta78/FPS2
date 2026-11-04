@@ -286,12 +286,12 @@ renderer.shadowMap.enabled = !NO_SHADOWS;
    grass    brins d'herbe des pelouses (02nb-gazon.js) : part des brins dessinés, portée (m), fin du gabarit détaillé (m) ;
    lean     profil allégé (Basse, Minimale) : textures réduites, ni relief par parallaxe ni paillettes, une seule cascade d'ombre avec les petits objets. */
 const QUALITY = {
-  high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 4, shadow: 2048, bloom: true, rays: true, lights: 4, lodPx: 110, detail: 55, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 22, 8] },
-  medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 4, shadow: 1536, bloom: true, rays: true, lights: 4, lodPx: 140, detail: 45, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 18, 7] },
+  high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 4, shadow: 2048, bloom: true, rays: true, lights: 4, lodPx: 110, detail: 55, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] },
+  medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 4, shadow: 1536, bloom: true, rays: true, lights: 4, lodPx: 140, detail: 45, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] },
   // palier réservé au mode automatique : sur les puces intégrées, l'anticrénelage 2x coûte nettement moins cher
   // en bande passante que le 4x et laisse une résolution plus haute, avant de devoir passer en Basse
-  medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1536, bloom: true, rays: true, lights: 3, lodPx: 150, detail: 38, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 15, 6] },
-  low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.55, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 28, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 12, 5], lean: true },
+  medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1536, bloom: true, rays: true, lights: 3, lodPx: 150, detail: 38, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] },
+  low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.55, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 28, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 8, 3], lean: true },
   // pour les machines trop faibles pour Basse (Intel HD 3000, vieux téléphones) : en plus de Basse, sans éclairs de tir ni gazon, menus détails et
   // dispersion au sol plus proches, modèle détaillé des soldats de plus près, plancher de résolution plus bas ; lancé ainsi, sans ombres calculées
   // (le soleil garde son ombre, cuite dans l'éclairage), sans pré-passe, textures au tiers (ULTRA)
