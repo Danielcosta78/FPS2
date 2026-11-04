@@ -67,7 +67,7 @@ try {
    (ecoAsk, 09zl-economie.js) ; ailleurs, désactivée sans question */
 if (Settings.eco !== true && Settings.eco !== false) { Settings.eco = COARSE; Settings.ecoAsk = COARSE; }
 /* Sous l'économie d'énergie, c'est le jeu qui règle l'image (Options, Vidéo : les rangées sont grisées et montrent ces valeurs). Qualité
-   automatique : elle part du profil de l'appareil (téléphone : Basse, puce intégrée : Moyenne, carte dédiée : Haute) et la résolution
+   automatique : elle part du profil de l'appareil (téléphone : Moyenne, puce intégrée : Moyenne, carte dédiée : Haute) et la résolution
    dynamique l'adapte, sans jamais monter au-delà du profil ; ni occlusion ambiante ni rayons du soleil (deux passes plein écran) ; l'herbe
    en relief reste, allégée par le profil. Minimale choisie reste Minimale (plus légère que tout le reste). Les choix du joueur sont gardés
    et reviennent quand il la désactive. gfxSet : la valeur en vigueur d'un réglage d'image, à lire au lieu de Settings. */
@@ -306,13 +306,13 @@ const QUALITY = {
    sa résolution (1 à scaleMin). Changer de résolution ne recrée rien (RS) ; changer de profil recrée les cibles. */
 const AUTO_LADDER = [['high', 0.8, 1], ['medium', 1, 1], ['medium2', 0.7, 1], ['low', 0.7, 1], ['ultra', 0.5, 0.7]];
 /* Profil de départ en mode automatique : carte graphique dédiée → Haute, puce intégrée (Intel Iris/UHD,
-   Radeon intégrées, Apple M) → Moyenne, téléphone → Basse, rendu logiciel et puce trop faible (GPU_WEAK) → Minimale.
+   Radeon intégrées, Apple M) → Moyenne, téléphone → Moyenne, rendu logiciel et puce trop faible (GPU_WEAK) → Minimale.
    La résolution dynamique fait le reste. */
 const GPU = (() => {
   const gl = renderer.getContext(); let name = '';
   try { const ext = gl.getExtension('WEBGL_debug_renderer_info'); name = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch (e) { /* inconnu */ }
   const discrete = /NVIDIA|GeForce|Quadro|RTX|GTX|Radeon RX|Radeon Pro|Radeon\(TM\) RX|FirePro|Arc\(TM\) A\d|Arc A\d/i.test(name);
-  return { name, tier: ULTRA ? 'ultra' : COARSE ? 'low' : discrete ? 'high' : 'medium' }; // téléphone : on part du plus léger, la résolution dynamique remonte si la puce suit
+  return { name, tier: ULTRA ? 'ultra' : COARSE ? 'medium' : discrete ? 'high' : 'medium' }; // téléphone : Moyenne
 })();
 /* État courant : profil retenu, facteur de résolution dynamique. En mode automatique : échelon de AUTO_LADDER (rung)
    et échelon de départ (rungMin), où la résolution va de la plage du profil jusqu'à la densité de l'écran (voir stepQuality). */
