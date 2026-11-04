@@ -1,0 +1,25 @@
+name: Optimize maps once
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: V2
+      - name: Apply optimization
+        run: python3 tools/optimize_maps.py
+      - name: Commit if changed
+        run: |
+          git config user.name "Danny78"
+          git config user.email "danielmendesdacosta78@gmail.com"
+          git add src/02nb-gazon.js src/01-core.js
+          if git diff --staged --quiet; then
+            echo "Nada a commitar"
+          else
+            git commit -m "Otimiza mapas V2: erva dens 28 + distâncias de detalhe/erva mais curtas"
+            git push origin V2
+          fi
