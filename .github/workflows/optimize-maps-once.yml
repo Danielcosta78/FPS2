@@ -1,0 +1,66 @@
+name: Optimize maps once
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: V2
+      - name: Apply optimization
+        run: |
+          python3 << 'PY'
+          from pathlib import Path
+
+          def patch_gazon(p: Path):
+              t = p.read_text(encoding="utf-8")
+              t2 = t.replace("GRASS.dens par m\u00b2, 80)", "GRASS.dens par m\u00b2, 28)")
+              t2 = t2.replace("dens: 80,", "dens: 28,")
+              if t2 == t:
+                  print("gazon: sem alteracoes")
+              else:
+                  p.write_text(t2, encoding="utf-8")
+                  print("gazon: dens 80 -> 28")
+
+          def patch_core(p: Path):
+              t = p.read_text(encoding="utf-8")
+              reps = [
+                  ("grass: [1, 40, 14]", "grass: [0.55, 22, 8]"),
+                  ("grass: [0.8, 34, 11]", "grass: [0.45, 18, 7]"),
+                  ("grass: [0.65, 28, 9]", "grass: [0.35, 15, 6]"),
+                  ("grass: [0.5, 22, 7]", "grass: [0.3, 12, 5]"),
+                  ("detail: 90, scatter: 44", "detail: 55, scatter: 28"),
+                  ("detail: 70, scatter: 38", "detail: 45, scatter: 24"),
+                  ("detail: 60, scatter: 32", "detail: 38, scatter: 20"),
+                  ("detail: 40, scatter: 24", "detail: 28, scatter: 16"),
+                  ("detail: 24, scatter: 14", "detail: 18, scatter: 10"),
+              ]
+              t2 = t
+              for a, b in reps:
+                  if a not in t2:
+                      print(f"core: padrao nao encontrado: {a}")
+                  else:
+                      t2 = t2.replace(a, b, 1)
+              if t2 == t:
+                  print("core: sem alteracoes")
+              else:
+                  p.write_text(t2, encoding="utf-8")
+                  print("core: QUALITY otimizado")
+
+          patch_gazon(Path("src/02nb-gazon.js"))
+          patch_core(Path("src/01-core.js"))
+          PY
+      - name: Commit if changed
+        run: |
+          git config user.name "Danny78"
+          git config user.email "danielmendesdacosta78@gmail.com"
+          git add src/02nb-gazon.js src/01-core.js
+          if git diff --staged --quiet; then
+            echo "Nada a commitar"
+          else
+            git commit -m "Otimiza mapas V2: erva dens 28 + distancias de detalhe/erva mais curtas"
+            git push origin HEAD:V2
+          fi
