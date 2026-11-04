@@ -17,7 +17,8 @@ function ecoClose(on) {
   const el = $('ecoAsk'); if (el.classList.contains('hidden')) return;
   el.classList.add('hidden'); sfxUi('click');
   const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;
-  if (!on && typeof COARSE !== 'undefined' && COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
+  /* Non merci : garder les mêmes coupures que l'éco (sinon Settings.rays/grass/dynres restaient true et s'allumaient) */
+  if (!on) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
   saveSettings(); syncOptions(); if (was !== on) ecoApply();
   const f = el._from; el._from = null; if (f && f.isConnected && f.focus && lmWantFocus()) f.focus({ preventScroll: true });
 }
