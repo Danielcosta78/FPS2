@@ -10,31 +10,47 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: V2
-      - name: Phone Settings defaults
+      - name: Force phone video defaults
         run: |
           python3 << 'PY'
           from pathlib import Path
+
+          # --- 01-core.js: migration sv 9 after saveSettings ---
           p = Path("src/01-core.js")
           t = p.read_text(encoding="utf-8")
-          old = "const Settings = { binds: {}, touch: 'auto', tcRun: 'stick', tcStick: 'float', tcLay: null, aimAssist: 'normal', tpMode: 'auto', tpSeen: false, tpHint: false, tpAuto: true, tpDblAds: true, adsToggle: false, tcAuto: true, tcDblAds: true, tcQuick: true, tcVib: true, tcAlpha: '1', tcV: 0, gfxSafe: false, gfxSafeAuto: '', padSeen: false, padSens: 1.0, padAdsMul: 0.65, adsMul: 1.0, padDead: 0.1, padCurve: 'reactive', padAccel: 'normal', padRun: 'click', padLay: 'default', padVib: true, sens: 1.0, fov: 62, quality: 'auto', dynres: true, eco: null, fpsMax: '0', perf: false, ao: false, rays: true, grass: true, difficulty: 2, loadout: 0, mode: 'tdm', limit: 75, limitFfa: 20, limitDom: 150, minutes: 10, map: 'sable', volume: 0.8, music: 0.5, voice: true, nadeArc: true, invertY: false, fsGame: false, allyMarks: true, hudScale: '1', skin: 'assault', lang: 'auto', sv: 8 };\ntry {"
-          new = "const Settings = { binds: {}, touch: 'auto', tcRun: 'stick', tcStick: 'float', tcLay: null, aimAssist: 'normal', tpMode: 'auto', tpSeen: false, tpHint: false, tpAuto: true, tpDblAds: true, adsToggle: false, tcAuto: true, tcDblAds: true, tcQuick: true, tcVib: true, tcAlpha: '1', tcV: 0, gfxSafe: false, gfxSafeAuto: '', padSeen: false, padSens: 1.0, padAdsMul: 0.65, adsMul: 1.0, padDead: 0.1, padCurve: 'reactive', padAccel: 'normal', padRun: 'click', padLay: 'default', padVib: true, sens: 1.0, fov: 62, quality: 'auto', dynres: true, eco: null, fpsMax: '0', perf: false, ao: false, rays: true, grass: true, difficulty: 2, loadout: 0, mode: 'tdm', limit: 75, limitFfa: 20, limitDom: 150, minutes: 10, map: 'sable', volume: 0.8, music: 0.5, voice: true, nadeArc: true, invertY: false, fsGame: false, allyMarks: true, hudScale: '1', skin: 'assault', lang: 'auto', sv: 8 };\n/* Téléphone / tablette : même sans économie d'énergie, AO, rayons, herbe et résolution dynamique partent coupés */\nif (COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }\ntry {"
+          old = "function saveSettings() { try { localStorage.setItem('dc_settings', JSON.stringify(Settings)); } catch (e) { /* ignoré */ } }\n/* Mode graphique économique"
+          new = "function saveSettings() { try { localStorage.setItem('dc_settings', JSON.stringify(Settings)); } catch (e) { /* ignoré */ } }\n/* Téléphone : une fois (sv < 9), AO / rayons / herbe / rés. dynamique restent coupés même si d'anciens réglages les avaient allumés */\nif (COARSE && Settings.sv < 9) {\n  Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; Settings.sv = 9; saveSettings();\n}\n/* Mode graphique économique"
           if old not in t:
-              print("MISS Settings block")
+              print("MISS saveSettings anchor")
           else:
               t = t.replace(old, new, 1)
-              print("OK phone Settings defaults")
+              print("OK migration sv9")
           p.write_text(t, encoding="utf-8")
-          assert "if (COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }" in p.read_text(encoding="utf-8")
+
+          # --- 09zl-economie.js: ao desligar eco no telemóvel, manter toggles off ---
+          p2 = Path("src/09zl-economie.js")
+          t2 = p2.read_text(encoding="utf-8")
+          old2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false; saveSettings(); syncOptions(); if (was !== on) ecoApply();"
+          new2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;\n  if (!on && typeof COARSE !== 'undefined' && COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }\n  saveSettings(); syncOptions(); if (was !== on) ecoApply();"
+          if old2 not in t2:
+              print("MISS ecoClose")
+          else:
+              t2 = t2.replace(old2, new2, 1)
+              print("OK ecoClose phone defaults")
+          p2.write_text(t2, encoding="utf-8")
+
+          assert "Settings.sv < 9" in Path("src/01-core.js").read_text(encoding="utf-8")
+          assert "if (!on && typeof COARSE" in Path("src/09zl-economie.js").read_text(encoding="utf-8")
           print("DONE")
           PY
       - name: Commit if changed
         run: |
           git config user.name "Danny78"
           git config user.email "danielmendesdacosta78@gmail.com"
-          git add src/01-core.js
+          git add src/01-core.js src/09zl-economie.js
           if git diff --staged --quiet; then
             echo "Nada a commitar"
           else
-            git commit -m "V2: telemóvel defaults ao/rays/grass/dynres false mesmo sem eco"
+            git commit -m "V2: forçar ao/rays/grass/dynres off no telemóvel (migração sv9 + ao recusar eco)"
             git push origin HEAD:V2
           fi
