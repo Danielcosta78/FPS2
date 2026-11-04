@@ -9,37 +9,37 @@
         "x_en": "New game name and new images (icons, visuals, and branding)."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Herbe en relief fortement allégée : densité réduite et portée de rendu rapprochée pour gagner des FPS sur les pelouses.",
         "x_en": "Relief grass heavily lightened: lower density and shorter draw distance for better FPS on lawns."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Détails du décor et dispersion au sol masqués plus tôt selon le profil de qualité.",
         "x_en": "Fine décor and ground scatter hidden sooner based on the quality profile."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Ombres en cascade allégées : cartes plus petites, deux cascades, portée réduite.",
         "x_en": "Lighter cascaded shadows: smaller maps, two cascades, shorter range."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Anticrénelage MSAA réduit en Haute et Moyenne pour soulager le GPU.",
         "x_en": "MSAA antialiasing reduced on High and Medium to ease the GPU."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Végétation plus légère : moins de feuilles sur les arbres et de palmes sur les palmiers ; LOD du feuillage plus proche.",
         "x_en": "Lighter vegetation: fewer leaves on trees and fronds on palms; foliage LOD closer."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Effets plein écran ajustés : rayons du soleil et bloom selon le profil pour de meilleures performances.",
         "x_en": "Fullscreen effects tuned: sun rays and bloom by profile for better performance."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Qualité automatique sur téléphone et tablette : démarrage en profil Moyenne.",
         "x_en": "Automatic quality on phone and tablet: starts on the Medium profile."
       },
@@ -49,7 +49,7 @@
         "x_en": "Online mode: open rooms to join matches more easily, plus other lobby and networking improvements."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Profil joueur retravaillé : présentation et options du profil plus claires et plus complètes.",
         "x_en": "Player profile updated: clearer layout and more complete profile options."
       },
@@ -59,7 +59,7 @@
         "x_en": "Previously locked sections are now freely available."
       },
       {
-        "t": "improve",
+        "t": "improved",
         "x": "Meilleure fluidité sur les cartes denses (végétation, jardins, grandes scènes).",
         "x_en": "Better smoothness on dense maps (vegetation, gardens, large scenes)."
       }
