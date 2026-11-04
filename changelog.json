@@ -4,6 +4,11 @@
     "date": "2026-11-04",
     "changes": [
       {
+        "t": "new",
+        "x": "Nouveau nom du jeu et nouvelles images (icônes, visuels et identité).",
+        "x_en": "New game name and new images (icons, visuals, and branding)."
+      },
+      {
         "t": "improve",
         "x": "Herbe en relief fortement allégée : densité réduite et portée de rendu rapprochée pour gagner des FPS sur les pelouses.",
         "x_en": "Relief grass heavily lightened: lower density and shorter draw distance for better FPS on lawns."
@@ -42,6 +47,16 @@
         "t": "new",
         "x": "Mode en ligne : salles ouvertes pour rejoindre des parties plus facilement, avec d’autres améliorations réseau et de salon.",
         "x_en": "Online mode: open rooms to join matches more easily, plus other lobby and networking improvements."
+      },
+      {
+        "t": "improve",
+        "x": "Profil joueur retravaillé : présentation et options du profil plus claires et plus complètes.",
+        "x_en": "Player profile updated: clearer layout and more complete profile options."
+      },
+      {
+        "t": "new",
+        "x": "Sections autrefois verrouillées désormais accessibles librement.",
+        "x_en": "Previously locked sections are now freely available."
       },
       {
         "t": "improve",
