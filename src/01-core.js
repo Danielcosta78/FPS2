@@ -286,11 +286,11 @@ renderer.shadowMap.enabled = !NO_SHADOWS;
    grass    brins d'herbe des pelouses (02nb-gazon.js) : part des brins dessinés, portée (m), fin du gabarit détaillé (m) ;
    lean     profil allégé (Basse, Minimale) : textures réduites, ni relief par parallaxe ni paillettes, une seule cascade d'ombre avec les petits objets. */
 const QUALITY = {
-  high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 2, shadow: 1536, bloom: true, rays: true, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] },
-  medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 2, shadow: 1024, bloom: true, rays: true, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] },
+  high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 2, shadow: 1536, bloom: true, rays: false, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] },
+  medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] },
   // palier réservé au mode automatique : sur les puces intégrées, l'anticrénelage 2x coûte nettement moins cher
   // en bande passante que le 4x et laisse une résolution plus haute, avant de devoir passer en Basse
-  medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1024, bloom: true, rays: true, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] },
+  medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] },
   low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.55, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 22, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 8, 3], lean: true },
   // pour les machines trop faibles pour Basse (Intel HD 3000, vieux téléphones) : en plus de Basse, sans éclairs de tir ni gazon, menus détails et
   // dispersion au sol plus proches, modèle détaillé des soldats de plus près, plancher de résolution plus bas ; lancé ainsi, sans ombres calculées
@@ -790,7 +790,7 @@ function shadowMapSize() { return RQ.q.shadow; }
 function setupShadows() {
   const A = CURMAP.def ? CURMAP.def.atmo : ATMO_DEFAULT;
   csm = new THREE.CSM({
-    camera, parent: scene, cascades: 3, maxFar: 120, mode: 'practical', shadowMapSize: shadowMapSize(),
+    camera, parent: scene, cascades: 2, maxFar: 90, mode: 'practical', shadowMapSize: shadowMapSize(),
     lightDirection: SUN_DIR.clone().negate(), lightIntensity: A.sunI, lightNear: 1, lightFar: 500, lightMargin: 140, shadowBias: -0.0001,
   });
   csm.fade = true;
