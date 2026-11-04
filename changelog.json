@@ -11,8 +11,8 @@
       },
       {
         "t": "improved",
-        "x": "Herbe en relief fortement allégée : densité réduite et portée de rendu rapprochée pour gagner des FPS sur les pelouses.",
-        "x_en": "Relief grass heavily lightened: lower density and shorter draw distance for better FPS on lawns."
+        "x": "Herbe en relief fortement allégée, avec une densité réduite et une portée de rendu rapprochée pour gagner des FPS sur les pelouses.",
+        "x_en": "Relief grass heavily lightened, with lower density and shorter draw distance for better FPS on lawns."
       },
       {
         "t": "improved",
@@ -21,8 +21,8 @@
       },
       {
         "t": "improved",
-        "x": "Ombres en cascade allégées : cartes plus petites, deux cascades, portée réduite.",
-        "x_en": "Lighter cascaded shadows: smaller maps, two cascades, shorter range."
+        "x": "Ombres en cascade allégées, avec des cartes plus petites, deux cascades et une portée réduite.",
+        "x_en": "Lighter cascaded shadows, with smaller maps, two cascades and shorter range."
       },
       {
         "t": "improved",
@@ -31,28 +31,28 @@
       },
       {
         "t": "improved",
-        "x": "Végétation plus légère : moins de feuilles sur les arbres et de palmes sur les palmiers ; LOD du feuillage plus proche.",
-        "x_en": "Lighter vegetation: fewer leaves on trees and fronds on palms; foliage LOD closer."
+        "x": "Végétation plus légère, avec moins de feuilles sur les arbres et de palmes sur les palmiers, et un LOD du feuillage plus proche.",
+        "x_en": "Lighter vegetation, with fewer leaves on trees and fronds on palms, and closer foliage LOD."
       },
       {
         "t": "improved",
-        "x": "Effets plein écran ajustés : rayons du soleil et bloom selon le profil pour de meilleures performances.",
-        "x_en": "Fullscreen effects tuned: sun rays and bloom by profile for better performance."
+        "x": "Effets plein écran ajustés, avec rayons du soleil et bloom selon le profil pour de meilleures performances.",
+        "x_en": "Fullscreen effects tuned, with sun rays and bloom by profile for better performance."
       },
       {
         "t": "improved",
-        "x": "Qualité automatique sur téléphone et tablette : démarrage en profil Moyenne.",
-        "x_en": "Automatic quality on phone and tablet: starts on the Medium profile."
+        "x": "Qualité automatique sur téléphone et tablette, avec démarrage en profil Moyenne.",
+        "x_en": "Automatic quality on phone and tablet, starting on the Medium profile."
       },
       {
         "t": "new",
-        "x": "Mode en ligne : salles ouvertes pour rejoindre des parties plus facilement, avec d’autres améliorations réseau et de salon.",
-        "x_en": "Online mode: open rooms to join matches more easily, plus other lobby and networking improvements."
+        "x": "Mode en ligne avec des salles ouvertes pour rejoindre des parties plus facilement, et d'autres améliorations réseau et de salon.",
+        "x_en": "Online mode with open rooms to join matches more easily, plus other lobby and networking improvements."
       },
       {
         "t": "improved",
-        "x": "Profil joueur retravaillé : présentation et options du profil plus claires et plus complètes.",
-        "x_en": "Player profile updated: clearer layout and more complete profile options."
+        "x": "Profil joueur retravaillé, avec une présentation et des options plus claires et plus complètes.",
+        "x_en": "Player profile updated, with a clearer layout and more complete options."
       },
       {
         "t": "new",
@@ -61,8 +61,8 @@
       },
       {
         "t": "improved",
-        "x": "Meilleure fluidité sur les cartes denses (végétation, jardins, grandes scènes).",
-        "x_en": "Better smoothness on dense maps (vegetation, gardens, large scenes)."
+        "x": "Moins de ralentissements sur les cartes denses (végétation, jardins, grandes scènes).",
+        "x_en": "Fewer slowdowns on dense maps (vegetation, gardens, large scenes)."
       }
     ]
   },
