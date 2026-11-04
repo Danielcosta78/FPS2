@@ -4,7 +4,7 @@
    pour three.js (Quick_Grass, licence MIT), avec ce que conseille le forum three.js pour tenir la cadence avec beaucoup de brins :
    tuiles, rejet hors du champ, niveaux de détail, géométrie réduite au loin, tout le mouvement dans le nuanceur de sommets.
    - Placement, au chargement (une fois, en JavaScript) : la zone de jeu est découpée en tuiles de 8 m ; dans chacune, des brins tirés
-     sur une grille tremblée (GRASS.dens par m², 80) là où la carte veut du gazon (grass.density de sa définition, de 0 à 1) et où il peut
+     sur une grille tremblée (GRASS.dens par m², 28) là où la carte veut du gazon (grass.density de sa définition, de 0 à 1) et où il peut
      pousser (masque au quart de mètre : sol au niveau 0, ni le vide ni un pont ni une terrasse, aucun obstacle posé, ni eau ni rampe).
      Les brins d'une tuile sont mélangés et numérotés : le rang d'un brin (de 0 à 1) décide s'il reste quand la densité baisse avec la
      distance ou la qualité, sans saut d'une tuile à l'autre.
@@ -24,7 +24,7 @@
    sèche] (sRGB), wind [direction x, direction z, force], width (demi-largeur au pied, m), amb (part de la couleur du ciel ajoutée :
    la lumière de l'environnement que reçoit le sol), dens (brins par m², GRASS.dens par défaut), seed }.
    ========================================================================== */
-const GRASS = { on: false, size: 8, dens: 80, width: 0.012, bytes: 0, chunks: [], root: null, mat: null, tplN: null, tplF: null, blades: 0, drawn: 0, ms: 0, frustum: new THREE.Frustum(), pv: new THREE.Matrix4(), box: new THREE.Box3() };
+const GRASS = { on: false, size: 8, dens: 28, width: 0.012, bytes: 0, chunks: [], root: null, mat: null, tplN: null, tplF: null, blades: 0, drawn: 0, ms: 0, frustum: new THREE.Frustum(), pv: new THREE.Matrix4(), box: new THREE.Box3() };
 /* Uniformes du gazon ; le temps, le champ de souplesse et le volume d'éclairage sont ceux de la flore et du décor (mêmes objets) */
 const GRASS_U = {
   uGrT: { value: 0 }, uGrW: { value: new THREE.Vector4(1, 0, 0.5, 0) }, uGrD: { value: new THREE.Vector4(40, 14, 1, 0.012) }, uGrP: { value: 0.0013 },
