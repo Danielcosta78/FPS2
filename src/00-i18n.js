@@ -7,7 +7,6 @@
    si le navigateur le demande en premier ; un changement recharge la page. Voir README, « Langues ».
    ========================================================================== */
 
-
 const I18N_EN = /*__I18N_EN__*/ {};
 const I18N_MISS = new Set(); // clés absentes du dictionnaire rencontrées en anglais (contrôle : tools/dev/check_i18n.py)
 /* Langue choisie : 'auto', 'en' ou 'fr' (enregistrée avec les réglages) ; la langue effective, LANG, est 'en' ou 'fr' */
