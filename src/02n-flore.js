@@ -142,7 +142,7 @@ const LIVE_VERT_BODY = `#include <begin_vertex>
   float sw = aSw;
   if (sw > 0.001) {
     vec3 wp = (modelMatrix * vec4(transformed, 1.0)).xyz;
-    float lod = 1.0 - smoothstep(38.0, 70.0, distance(wp, cameraPosition));
+    float lod = 1.0 - smoothstep(22.0, 42.0, distance(wp, cameraPosition));
     if (lod > 0.0) {
       float t = uLvT;
       vec3 wd = windDisp(wp, vec3(uLvW.y, uLvW.x, 0.0)); // rafale qui traverse la carte, inclinaison et balancement

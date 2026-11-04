@@ -106,7 +106,7 @@ function palmTrunk(M, R, bx, bz, h, lx, lz, g, lite) {
 /* Couronne : palmes vertes sur une spirale d'angle d'or, du cœur (jeunes palmes presque droites) au bord (les plus anciennes, qui retombent), puis
    palmes sèches pendantes. top : sommet du tronc ; hb : hauteur du tronc au pied de la couronne ; sc : échelle de la couronne (rejets : petite) */
 function palmCrown(M, R, top, hb, S, lite, sc = 1, at = null) {
-  const n = Math.max(6, Math.round(S.n * (lite ? 0.72 : 1) * Math.min(1, 0.5 + sc * 0.5))), segs = lite ? 5 : 8, cr = S.c * sc, open = S.open;
+  const n = Math.max(6, Math.round(S.n * (lite ? 0.55 : 0.72) * Math.min(1, 0.5 + sc * 0.5))), segs = lite ? 5 : 8, cr = S.c * sc, open = S.open;
   const tn = () => [R.range(0.88, 1) * S.tint[0], R.range(0.92, 1) * S.tint[1], R.range(0.8, 0.95) * S.tint[2]];
   // bulbe de bases de palmes sous la couronne
   M.color([0.6, 0.5, 0.36]);

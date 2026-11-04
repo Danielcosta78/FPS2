@@ -57,7 +57,7 @@ PF.tree = (kind, h = 9, r = 3.4, seed = 1, o = {}) => prefab(`tree_${kind}_${h}_
   }
   M.restore();
   // couronne : rameaux feuillus qui rayonnent du cœur vers la coque de l'ellipsoïde (normales rayonnantes, cœur sombre)
-  const n = o.n || Math.round((70 + rr * rr * 8) * (lod ? 0.45 : 0.95)), crown = [cx, cy, cz, rr / ry];
+  const n = o.n || Math.round((70 + rr * rr * 8) * (lod ? 0.28 : 0.55)), crown = [cx, cy, cz, rr / ry];
   M.save().cls = 0;
   for (let i = 0; i < n; i++) {
     let dx, dy, dz, d; do { dx = R.range(-1, 1); dy = R.range(-1, 1); dz = R.range(-1, 1); d = hyp3(dx, dy, dz); } while (d > 1 || d < 0.2);
