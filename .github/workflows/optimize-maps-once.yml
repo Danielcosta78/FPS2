@@ -10,49 +10,58 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: V2
-      - name: Apply cascades + bloom/rays
+      - name: Apply phone medium + eco gfx
         run: |
           python3 << 'PY'
           from pathlib import Path
           p = Path("src/01-core.js")
           t = p.read_text(encoding="utf-8")
 
-          # 1) Cascates 3 -> 2, maxFar 120 -> 90
-          old_csm = "camera, parent: scene, cascades: 3, maxFar: 120, mode: 'practical', shadowMapSize: shadowMapSize(),"
-          new_csm = "camera, parent: scene, cascades: 2, maxFar: 90, mode: 'practical', shadowMapSize: shadowMapSize(),"
-          if old_csm not in t:
-              print("MISS csm cascades")
+          old_eco = "const ECO_GFX = { quality: 'auto', ao: false, rays: false, grass: true, dynres: true };"
+          new_eco = "const ECO_GFX = { quality: 'auto', ao: false, rays: false, grass: false, dynres: false };"
+          if old_eco not in t:
+              print("MISS ECO_GFX")
           else:
-              t = t.replace(old_csm, new_csm, 1)
-              print("OK cascades 3->2, maxFar 120->90")
+              t = t.replace(old_eco, new_eco, 1)
+              print("OK ECO_GFX grass/dynres false")
 
-          # 2) Bloom/rays por perfil
-          reps = [
-              (
-                  "high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 2, shadow: 1536, bloom: true, rays: true, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] }",
-                  "high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 2, shadow: 1536, bloom: true, rays: false, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] }",
-              ),
-              (
-                  "medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 2, shadow: 1024, bloom: true, rays: true, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] }",
-                  "medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] }",
-              ),
-              (
-                  "medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1024, bloom: true, rays: true, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] }",
-                  "medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] }",
-              ),
-          ]
-          for a, b in reps:
-              if a not in t:
-                  print("MISS:", a[:70])
-              else:
-                  t = t.replace(a, b, 1)
-                  print("OK:", "rays" if "rays: false" in b else b[:50])
+          old_tier = "return { name, tier: ULTRA ? 'ultra' : COARSE ? 'low' : discrete ? 'high' : 'medium' }; // téléphone : on part du plus léger, la résolution dynamique remonte si la puce suit"
+          new_tier = "return { name, tier: ULTRA ? 'ultra' : COARSE ? 'medium' : discrete ? 'high' : 'medium' }; // téléphone : Moyenne (eco : ao/rays/grass/dynres off)"
+          if old_tier not in t:
+              print("MISS GPU.tier")
+          else:
+              t = t.replace(old_tier, new_tier, 1)
+              print("OK phone tier medium")
+
+          # comments
+          t2 = t.replace(
+              "téléphone : Basse, puce intégrée : Moyenne, carte dédiée : Haute",
+              "téléphone : Moyenne, puce intégrée : Moyenne, carte dédiée : Haute",
+              1,
+          )
+          if t2 != t:
+              t = t2
+              print("OK comment appareil")
+          t2 = t.replace(
+              "téléphone → Basse, rendu logiciel",
+              "téléphone → Moyenne, rendu logiciel",
+              1,
+          )
+          if t2 != t:
+              t = t2
+              print("OK comment profil départ")
+          t2 = t.replace(
+              "ni occlusion ambiante ni rayons du soleil (deux passes plein écran) ; l'herbe\n   en relief reste, allégée par le profil.",
+              "ni occlusion ambiante, ni rayons du soleil, ni herbe en relief, ni résolution dynamique.",
+              1,
+          )
+          if t2 != t:
+              t = t2
+              print("OK comment eco gfx")
 
           p.write_text(t, encoding="utf-8")
-          # verify
-          t2 = p.read_text(encoding="utf-8")
-          assert "cascades: 2, maxFar: 90" in t2
-          assert "rays: false" in t2
+          assert "COARSE ? 'medium'" in p.read_text(encoding="utf-8")
+          assert "grass: false, dynres: false" in p.read_text(encoding="utf-8")
           print("DONE")
           PY
       - name: Commit if changed
@@ -63,6 +72,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Nada a commitar"
           else
-            git commit -m "Perf V2: 2 cascates sombra (maxFar 90), rays off high+, bloom off medium"
+            git commit -m "Perf V2: telemóveis partem medium; eco ao/rays/grass/dynres off"
             git push origin HEAD:V2
           fi
