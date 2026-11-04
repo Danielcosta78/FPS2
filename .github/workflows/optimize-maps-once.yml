@@ -10,37 +10,65 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: V2
-      - name: Force phone video defaults
+      - name: Fix No thanks enabling toggles
         run: |
           python3 << 'PY'
           from pathlib import Path
 
-          # --- 01-core.js: migration sv 9 after saveSettings ---
+          # 1) Settings defaults: rays/grass/dynres false (safer; user can enable)
           p = Path("src/01-core.js")
           t = p.read_text(encoding="utf-8")
-          old = "function saveSettings() { try { localStorage.setItem('dc_settings', JSON.stringify(Settings)); } catch (e) { /* ignoré */ } }\n/* Mode graphique économique"
-          new = "function saveSettings() { try { localStorage.setItem('dc_settings', JSON.stringify(Settings)); } catch (e) { /* ignoré */ } }\n/* Téléphone : une fois (sv < 9), AO / rayons / herbe / rés. dynamique restent coupés même si d'anciens réglages les avaient allumés */\nif (COARSE && Settings.sv < 9) {\n  Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; Settings.sv = 9; saveSettings();\n}\n/* Mode graphique économique"
-          if old not in t:
-              print("MISS saveSettings anchor")
+          t2 = t.replace(
+              "quality: 'auto', dynres: true, eco: null, fpsMax: '0', perf: false, ao: false, rays: true, grass: true,",
+              "quality: 'auto', dynres: false, eco: null, fpsMax: '0', perf: false, ao: false, rays: false, grass: false,",
+              1,
+          )
+          if t2 == t:
+              print("MISS Settings defaults (maybe already false)")
           else:
-              t = t.replace(old, new, 1)
-              print("OK migration sv9")
+              t = t2
+              print("OK Settings defaults rays/grass/dynres false")
+
+          # 2) While eco is on at boot, mirror ECO_GFX into Settings so No thanks does not resurrect true
+          needle = "if (Settings.eco !== true && Settings.eco !== false) { Settings.eco = COARSE; Settings.ecoAsk = COARSE; }"
+          insert = needle + "\nif (Settings.eco) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }"
+          if "if (Settings.eco) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }" in t:
+              print("eco mirror already present")
+          elif needle not in t:
+              print("MISS eco init")
+          else:
+              t = t.replace(needle, insert, 1)
+              print("OK eco mirrors into Settings")
+
           p.write_text(t, encoding="utf-8")
 
-          # --- 09zl-economie.js: ao desligar eco no telemóvel, manter toggles off ---
+          # 3) ecoClose: always force off when declining (any device)
           p2 = Path("src/09zl-economie.js")
           t2 = p2.read_text(encoding="utf-8")
-          old2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false; saveSettings(); syncOptions(); if (was !== on) ecoApply();"
-          new2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;\n  if (!on && typeof COARSE !== 'undefined' && COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }\n  saveSettings(); syncOptions(); if (was !== on) ecoApply();"
-          if old2 not in t2:
-              print("MISS ecoClose")
+          old = """const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;
+  if (!on && typeof COARSE !== 'undefined' && COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
+  saveSettings(); syncOptions(); if (was !== on) ecoApply();"""
+          new = """const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;
+  /* Non merci : garder les mêmes coupures que l'éco (sinon Settings.rays/grass/dynres restaient true et s'allumaient) */
+  if (!on) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
+  saveSettings(); syncOptions(); if (was !== on) ecoApply();"""
+          if old not in t2:
+              # try without prior COARSE block
+              old2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false; saveSettings(); syncOptions(); if (was !== on) ecoApply();"
+              new2 = "const was = Settings.eco; Settings.eco = on; Settings.ecoAsk = false;\n  if (!on) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }\n  saveSettings(); syncOptions(); if (was !== on) ecoApply();"
+              if old2 in t2:
+                  t2 = t2.replace(old2, new2, 1)
+                  print("OK ecoClose (simple)")
+              else:
+                  print("MISS ecoClose")
+                  print(repr(t2[t2.find("Settings.eco = on"):t2.find("Settings.eco = on")+200]))
           else:
-              t2 = t2.replace(old2, new2, 1)
-              print("OK ecoClose phone defaults")
+              t2 = t2.replace(old, new, 1)
+              print("OK ecoClose (force off on decline)")
           p2.write_text(t2, encoding="utf-8")
 
-          assert "Settings.sv < 9" in Path("src/01-core.js").read_text(encoding="utf-8")
-          assert "if (!on && typeof COARSE" in Path("src/09zl-economie.js").read_text(encoding="utf-8")
+          text = Path("src/09zl-economie.js").read_text(encoding="utf-8")
+          assert "if (!on) { Settings.ao = false" in text
           print("DONE")
           PY
       - name: Commit if changed
@@ -51,6 +79,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Nada a commitar"
           else
-            git commit -m "V2: forçar ao/rays/grass/dynres off no telemóvel (migração sv9 + ao recusar eco)"
+            git commit -m "V2: Non merci não reativa ao/rays/grass/dynres; defaults false"
             git push origin HEAD:V2
           fi
