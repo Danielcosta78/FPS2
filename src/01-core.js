@@ -43,9 +43,7 @@ function deckLooksLike() {
 /* Écran tactile comme pointeur principal (téléphone, tablette) : contrôles tactiles (09q-tactile.js) et profil graphique de départ allégé */
 const COARSE = !DECK && typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && (navigator.maxTouchPoints || 0) > 0;
 const VIEW = { w: innerWidth, h: innerHeight, set: false }; // taille de la vue 3D (viewSync)
-const Settings = { binds: {}, touch: 'auto', tcRun: 'stick', tcStick: 'float', tcLay: null, aimAssist: 'normal', tpMode: 'auto', tpSeen: false, tpHint: false, tpAuto: true, tpDblAds: true, adsToggle: false, tcAuto: true, tcDblAds: true, tcQuick: true, tcVib: true, tcAlpha: '1', tcV: 0, gfxSafe: false, gfxSafeAuto: '', padSeen: false, padSens: 1.0, padAdsMul: 0.65, adsMul: 1.0, padDead: 0.1, padCurve: 'reactive', padAccel: 'normal', padRun: 'click', padLay: 'default', padVib: true, sens: 1.0, fov: 62, quality: 'auto', dynres: false, eco: null, fpsMax: '0', perf: false, ao: false, rays: false, grass: false, difficulty: 2, loadout: 0, mode: 'tdm', limit: 75, limitFfa: 20, limitDom: 150, minutes: 10, map: 'sable', volume: 0.8, music: 0.5, voice: true, nadeArc: true, invertY: false, fsGame: false, allyMarks: true, hudScale: '1', skin: 'assault', lang: 'auto', sv: 8 };
-/* Téléphone / tablette : même sans économie d'énergie, AO, rayons, herbe et résolution dynamique partent coupés */
-if (COARSE) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
+const Settings = { binds: {}, touch: 'auto', tcRun: 'stick', tcStick: 'float', tcLay: null, aimAssist: 'normal', tpMode: 'auto', tpSeen: false, tpHint: false, tpAuto: true, tpDblAds: true, adsToggle: false, tcAuto: true, tcDblAds: true, tcQuick: true, tcVib: true, tcAlpha: '1', tcV: 0, gfxSafe: false, gfxSafeAuto: '', padSeen: false, padSens: 1.0, padAdsMul: 0.65, adsMul: 1.0, padDead: 0.1, padCurve: 'reactive', padAccel: 'normal', padRun: 'click', padLay: 'default', padVib: true, sens: 1.0, fov: 62, quality: 'auto', dynres: true, eco: null, fpsMax: '0', perf: false, ao: false, rays: true, grass: true, difficulty: 2, loadout: 0, mode: 'tdm', limit: 75, limitFfa: 20, limitDom: 150, minutes: 10, map: 'sable', volume: 0.8, music: 0.5, voice: true, nadeArc: true, invertY: false, fsGame: false, allyMarks: true, hudScale: '1', skin: 'assault', lang: 'auto', sv: 8 };
 try {
   const s = JSON.parse(localStorage.getItem('dc_settings') || 'null');
   // réglages d'avant la version 2 : la qualité « Haute » y était la valeur par défaut, on passe en automatique
@@ -68,22 +66,18 @@ try {
 /* Économie d'énergie (CAP, plus bas) : jamais choisie, elle part activée au doigt (téléphone, tablette) et le jeu demande une fois s'il faut la garder
    (ecoAsk, 09zl-economie.js) ; ailleurs, désactivée sans question */
 if (Settings.eco !== true && Settings.eco !== false) { Settings.eco = COARSE; Settings.ecoAsk = COARSE; }
-if (Settings.eco) { Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; }
 /* Sous l'économie d'énergie, c'est le jeu qui règle l'image (Options, Vidéo : les rangées sont grisées et montrent ces valeurs). Qualité
-   automatique : elle part du profil de l'appareil (téléphone : Moyenne, puce intégrée : Moyenne, carte dédiée : Haute) et la résolution
-   dynamique l'adapte, sans jamais monter au-delà du profil ; ni occlusion ambiante, ni rayons du soleil, ni herbe en relief, ni résolution dynamique. Minimale choisie reste Minimale (plus légère que tout le reste). Les choix du joueur sont gardés
+   automatique : elle part du profil de l'appareil (téléphone : Basse, puce intégrée : Moyenne, carte dédiée : Haute) et la résolution
+   dynamique l'adapte, sans jamais monter au-delà du profil ; ni occlusion ambiante ni rayons du soleil (deux passes plein écran) ; l'herbe
+   en relief reste, allégée par le profil. Minimale choisie reste Minimale (plus légère que tout le reste). Les choix du joueur sont gardés
    et reviennent quand il la désactive. gfxSet : la valeur en vigueur d'un réglage d'image, à lire au lieu de Settings. */
-const ECO_GFX = { quality: 'auto', ao: false, rays: false, grass: false, dynres: false };
+const ECO_GFX = { quality: 'auto', ao: false, rays: false, grass: true, dynres: true };
 function gfxSet(k) {
   if (!Settings.eco || !(k in ECO_GFX)) return Settings[k];
   return k === 'quality' && Settings.quality === 'ultra' ? 'ultra' : ECO_GFX[k];
 }
 if (!(Settings.tpSens > 0)) Settings.tpSens = Settings.sens; // sensibilité du pavé tactile (09qe-pavetactile.js) : celle de la souris au départ, indépendante ensuite
 function saveSettings() { try { localStorage.setItem('dc_settings', JSON.stringify(Settings)); } catch (e) { /* ignoré */ } }
-/* Téléphone : une fois (sv < 9), AO / rayons / herbe / rés. dynamique restent coupés même si d'anciens réglages les avaient allumés */
-if (COARSE && Settings.sv < 9) {
-  Settings.ao = false; Settings.rays = false; Settings.grass = false; Settings.dynres = false; Settings.sv = 9; saveSettings();
-}
 /* Mode graphique économique (Options, Vidéo ; activé tout seul après une perte du contexte WebGL, voir 01a-gpu.js) : profil Basse allégé (ombres 512, pas d'éclairs
    de tir, rendu plus petit), textures réduites, pas de pré-passe de profondeur. Lu une fois au chargement : le changement relance le jeu. */
 /* Identifiant du build en cours (balise cod-build, écrite par build.py) */
@@ -312,13 +306,13 @@ const QUALITY = {
    sa résolution (1 à scaleMin). Changer de résolution ne recrée rien (RS) ; changer de profil recrée les cibles. */
 const AUTO_LADDER = [['high', 0.8, 1], ['medium', 1, 1], ['medium2', 0.7, 1], ['low', 0.7, 1], ['ultra', 0.5, 0.7]];
 /* Profil de départ en mode automatique : carte graphique dédiée → Haute, puce intégrée (Intel Iris/UHD,
-   Radeon intégrées, Apple M) → Moyenne, téléphone → Moyenne, rendu logiciel et puce trop faible (GPU_WEAK) → Minimale.
+   Radeon intégrées, Apple M) → Moyenne, téléphone → Basse, rendu logiciel et puce trop faible (GPU_WEAK) → Minimale.
    La résolution dynamique fait le reste. */
 const GPU = (() => {
   const gl = renderer.getContext(); let name = '';
   try { const ext = gl.getExtension('WEBGL_debug_renderer_info'); name = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch (e) { /* inconnu */ }
   const discrete = /NVIDIA|GeForce|Quadro|RTX|GTX|Radeon RX|Radeon Pro|Radeon\(TM\) RX|FirePro|Arc\(TM\) A\d|Arc A\d/i.test(name);
-  return { name, tier: ULTRA ? 'ultra' : COARSE ? 'medium' : discrete ? 'high' : 'medium' }; // téléphone : Moyenne (eco : ao/rays/grass/dynres off)
+  return { name, tier: ULTRA ? 'ultra' : COARSE ? 'low' : discrete ? 'high' : 'medium' }; // téléphone : on part du plus léger, la résolution dynamique remonte si la puce suit
 })();
 /* État courant : profil retenu, facteur de résolution dynamique. En mode automatique : échelon de AUTO_LADDER (rung)
    et échelon de départ (rungMin), où la résolution va de la plage du profil jusqu'à la densité de l'écran (voir stepQuality). */
