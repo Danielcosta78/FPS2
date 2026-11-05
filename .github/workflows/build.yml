@@ -1,7 +1,7 @@
 name: Construir o jogo
 on:
   push:
-    branches: [V2]
+    branches: [V3]
     paths: ['src/**', 'shell.html', 'build.py', 'i18n/**', 'assets/**', 'changelog.json']
   workflow_dispatch:
 permissions:
@@ -12,13 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: V2
+          ref: V3
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python3 build.py
       - run: |
           git config user.name "github-actions[bot]"
-          git diff --cached --quiet || (git commit -m "dist: reconstruído a partir de src/" && git push origin HEAD:V2)
+          git diff --cached --quiet || (git commit -m "dist: reconstruído a partir de src/" && git push origin HEAD:V3)
           git add -A dist docs
           git diff --cached --quiet || (git commit -m "dist: reconstruído a partir de src/" && git push)
