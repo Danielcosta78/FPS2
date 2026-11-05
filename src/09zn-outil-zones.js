@@ -2,18 +2,21 @@
    OUTIL DES ZONES (outil de développement)
    Le jeu ouvert avec ?outil=zones (https://playriposte-dev.vercel.app/?outil=zones, &carte=<id> pour commencer sur une carte) montre le plan
    d'une carte vu de dessus, avec ses zones de largage du mecha (MNAV.zones, cercles verts à la taille du souffle de la chute), ses trois points
-   de domination (MAP_DEFS.<id>.dom, cercles dorés A, B, C à la taille de la zone de capture) et les apparitions des deux camps. On fait glisser
-   une zone à la souris ou au doigt ; avec Miroir, sa jumelle de l'autre camp (x, -z) suit ; on ajoute ou enlève des zones de largage. Une zone
+   de domination (MAP_DEFS.<id>.dom, cercles dorés A, B, C à la taille de la zone de capture), ses deux sites de bombe (MAP_DEFS.<id>.bomb,
+   cercles orange A et B, 09ib-bombe.js) et les apparitions des deux camps. On fait glisser
+   une zone à la souris ou au doigt ; avec Miroir, sa jumelle de l'autre camp (x, -z) suit (largages et domination, pas la bombe) ; on ajoute ou enlève des zones de largage. Une zone
    de largage où le mecha ne peut pas se poser (toit, ruelle trop étroite, sous un auvent) est barrée de rouge ; si le mecha se pose un peu à côté,
-   un trait mène au point réel (mnavSnap, 08f-mecha.js) ; un point de domination hors du sol praticable (sur un toit, dans un bâtiment) est
+   un trait mène au point réel (mnavSnap, 08f-mecha.js) ; un point de domination ou un site de bombe hors du sol praticable (sur un toit, dans un bâtiment) est
    barré aussi. Copier la configuration met dans le presse-papiers une ligne par carte retouchée,
-   "<id> mecha [[x, z], ...] dom [[x, z], [x, z], [x, z]]", à reporter dans MAP_DEFS.<id>.mecha et .dom. Les retouches sont gardées dans le
+   "<id> mecha [[x, z], ...] dom [[x, z], [x, z], [x, z]] bomb [[x, z], [x, z]]", à reporter dans MAP_DEFS.<id>.mecha, .dom et .bomb. Les retouches sont gardées dans le
    navigateur d'une visite à l'autre (OZ_KEY). Sans ?outil=zones, rien ne change : OUTIL est faux pour un joueur.
    ========================================================================== */
 const OUTIL = new URLSearchParams(location.search).get('outil') === 'zones';
 const OZ_KEY = 'dc_outil_zones';
 const OZ = { maps: {}, base: {}, id: null, sel: null, drag: null, mirror: true, plan: null, v: null, snap: new Map(), busy: false, msg: '' };
 const ozRound = ([x, z]) => [Math.round(x * 2) / 2, Math.round(z * 2) / 2];
+/* Rayon d'une zone à l'écran, en mètres : largage (m), domination (d) ou site de bombe (b) */
+const ozRad = (k) => (k === 'm' ? MECHA_D.blast : k === 'd' ? DOM.rad : BOMB.rad);
 /* Une fois le jeu prêt (menu principal affiché) : l'outil par-dessus, puis la carte demandée */
 function ozStart() {
   if (!GPUX.booted || MATCH.state !== 'menu' || UI.busy) { setTimeout(ozStart, 300); return; }
@@ -27,7 +30,7 @@ function ozBuild() {
   el.innerHTML = `<canvas id="ozCv"></canvas><aside>
     <b>${esc(_t('Zones des cartes'))}</b>
     <select id="ozMap">${MAPS.filter((m) => m.ok).map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>
-    <p class="oz-leg"><i class="m"></i>${esc(_t('Largage du mecha'))}<i class="d"></i>${esc(_t('Domination'))}</p>
+    <p class="oz-leg"><i class="m"></i>${esc(_t('Largage du mecha'))}<i class="d"></i>${esc(_t('Domination'))}<i class="b" style="background:rgb(229,96,60)"></i>${esc(_t('Sites de la bombe'))}</p>
     <p id="ozInfo"></p>
     <label><input type="checkbox" id="ozMir" checked>${esc(_t('Miroir'))}</label>
     <div class="oz-row"><button class="btn" id="ozAdd" type="button">${esc(_t('Ajouter'))}</button><button class="btn" id="ozDel" type="button">${esc(_t('Supprimer'))}</button></div>
@@ -51,14 +54,15 @@ async function ozMap(id) {
   if (OZ.id !== id) return; // une autre carte a été choisie pendant le chargement
   const d = MAP_DEFS[id];
   OZ.plan = mapPlanPaint(TAC_S, 0, 0, false).c;
-  OZ.base[id] = { mecha: (d.mecha || MNAV.zones.map((q) => [q.x, q.z])).map(ozRound), dom: (d.dom || []).map(ozRound) };
-  if (!OZ.maps[id]) OZ.maps[id] = { mecha: OZ.base[id].mecha.map((p) => p.slice()), dom: OZ.base[id].dom.map((p) => p.slice()), edited: false };
+  OZ.base[id] = { mecha: (d.mecha || MNAV.zones.map((q) => [q.x, q.z])).map(ozRound), dom: (d.dom || []).map(ozRound), bomb: (d.bomb || bombDefaults()).map(ozRound) };
+  if (!OZ.maps[id]) OZ.maps[id] = { mecha: OZ.base[id].mecha.map((p) => p.slice()), dom: OZ.base[id].dom.map((p) => p.slice()), bomb: OZ.base[id].bomb.map((p) => p.slice()), edited: false };
+  else if (!OZ.maps[id].bomb) OZ.maps[id].bomb = OZ.base[id].bomb.map((p) => p.slice()); // retouches gardées avant les sites de bombe
   OZ.busy = false; OZ.msg = ''; ozDraw();
 }
-/* Les zones de la carte affichée, chacune avec son genre (m : largage, d : domination) et sa place dans sa liste */
+/* Les zones de la carte affichée, chacune avec son genre (m : largage, d : domination, b : site de bombe) et sa place dans sa liste */
 function ozItems() {
   const M = OZ.maps[OZ.id]; if (!M) return [];
-  return M.mecha.map((p, i) => ({ k: 'm', i, p })).concat(M.dom.map((p, i) => ({ k: 'd', i, p })));
+  return M.mecha.map((p, i) => ({ k: 'm', i, p })).concat(M.dom.map((p, i) => ({ k: 'd', i, p })), M.bomb.map((p, i) => ({ k: 'b', i, p })));
 }
 const ozSame = (a, b) => !!a && !!b && a.k === b.k && a.i === b.i;
 /* Où le mecha se posera pour une zone placée en (x, z) (mémorisé : le calcul tire des rayons) */
@@ -100,7 +104,7 @@ function ozDraw() {
   g.font = '700 15px "Barlow Condensed", sans-serif'; g.textBaseline = 'middle';
   for (const it of ozItems()) {
     const x = ozX(it.p[0]), y = ozY(it.p[1]), on = ozSame(it, OZ.sel), m = it.k === 'm';
-    const R = (m ? MECHA_D.blast : DOM.rad) * s, col = m ? '143,209,106' : '244,190,58';
+    const R = ozRad(it.k) * s, col = m ? '143,209,106' : it.k === 'd' ? '244,190,58' : '229,96,60';
     let bad = !m && !ozGround(it.p);
     if (m) {
       const q = ozSnap(it.p);
@@ -114,11 +118,11 @@ function ozDraw() {
     g.beginPath(); g.arc(x, y, R, 0, TAU); g.fill(); g.stroke();
     if (on) { g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, R + 3, 0, TAU); g.stroke(); }
     if (bad) { const d = R * 0.6; g.strokeStyle = '#ff5a48'; g.lineWidth = 3; g.beginPath(); g.moveTo(x - d, y - d); g.lineTo(x + d, y + d); g.moveTo(x + d, y - d); g.lineTo(x - d, y + d); g.stroke(); }
-    g.fillStyle = '#fff'; g.fillText(m ? String(it.i + 1) : DOM.names[it.i], x, y);
+    g.fillStyle = '#fff'; g.fillText(m ? String(it.i + 1) : it.k === 'd' ? DOM.names[it.i] : BOMB.names[it.i], x, y);
   }
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
 }
-/* Un point de domination se pose sur le sol praticable sous lui (domInit) : à moins de 1,5 m, sinon il tomberait dans un bâtiment */
+/* Un point de domination ou un site de bombe se pose sur le sol praticable sous lui (domInit, bombInit) : à moins de 1,5 m, sinon il tomberait dans un bâtiment */
 function ozGround(p) { const id = navNode(p[0], gy0(p[0], p[1]), p[1]); return id >= 0 && hyp(NAV.nx[id] - p[0], NAV.nz[id] - p[1]) < 1.5; }
 /* Panneau : la zone choisie (place, distance aux apparitions, où se pose le mecha), ou la consigne */
 function ozInfo() {
@@ -126,8 +130,8 @@ function ozInfo() {
   let t = OZ.msg && !OZ.busy ? OZ.msg : '';
   if (!t && it && OZ.maps[OZ.id]) {
     const p = it.p, far = (L) => Math.round(Math.min(...L.map(([x, z]) => hyp(x - p[0], z - p[1]))));
-    t = (it.k === 'm' ? _t('Largage {0}', it.i + 1) : _t('Domination {0}', DOM.names[it.i])) + ` (${p[0]}, ${p[1]}). ` + _t('Alpha à {0} m, Bravo à {1} m.', far(SPAWNS[0]), far(SPAWNS[1]));
-    if (it.k === 'd' && !ozGround(p)) t += ' ' + _t('Pas de sol praticable sous ce point.');
+    t = (it.k === 'm' ? _t('Largage {0}', it.i + 1) : it.k === 'd' ? _t('Domination {0}', DOM.names[it.i]) : _t('Site de bombe {0}', BOMB.names[it.i])) + ` (${p[0]}, ${p[1]}). ` + _t('Alpha à {0} m, Bravo à {1} m.', far(SPAWNS[0]), far(SPAWNS[1]));
+    if (it.k !== 'm' && !ozGround(p)) t += ' ' + _t('Pas de sol praticable sous ce point.');
     if (it.k === 'm') { const q = ozSnap(p); t += ' ' + (!q ? _t('Le mecha ne peut pas se poser ici.') : hyp(q.x - p[0], q.z - p[1]) > 0.8 ? _t('Le mecha se posera à {0} m.', Math.round(hyp(q.x - p[0], q.z - p[1]))) : ''); }
   }
   if (!t) t = _t('Faites glisser une zone pour la déplacer.');
@@ -139,16 +143,16 @@ function ozDown(e) {
   const r = $('ozCv').getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
   let best = null, bd = 1e9;
   for (const it of ozItems()) {
-    const d = hyp(ozX(it.p[0]) - px, ozY(it.p[1]) - py), R = Math.max(22, (it.k === 'm' ? MECHA_D.blast : DOM.rad) * OZ.v.s);
+    const d = hyp(ozX(it.p[0]) - px, ozY(it.p[1]) - py), R = Math.max(22, ozRad(it.k) * OZ.v.s);
     if (d < R && d < bd) { bd = d; best = it; }
   }
   OZ.sel = best; OZ.msg = '';
   if (best) {
-    // la jumelle : le point de domination d'en face (A et C), ou la zone de largage qui est au reflet de celle-ci
+    // la jumelle : le point de domination d'en face (A et C), ou la zone de largage qui est au reflet de celle-ci ; un site de bombe n'en a pas
     let twin = null;
     if (OZ.mirror && Math.abs(best.p[1]) > 1.5) {
       if (best.k === 'd') { const j = 2 - best.i; if (j !== best.i) twin = { k: 'd', i: j, p: OZ.maps[OZ.id].dom[j] }; }
-      else for (const it of ozItems()) if (it.k === 'm' && it.i !== best.i && hyp(it.p[0] - best.p[0], it.p[1] + best.p[1]) < 3) twin = it;
+      else if (best.k === 'm') for (const it of ozItems()) if (it.k === 'm' && it.i !== best.i && hyp(it.p[0] - best.p[0], it.p[1] + best.p[1]) < 3) twin = it;
     }
     OZ.drag = { it: best, twin, dx: best.p[0] - ((px - OZ.v.ox) / OZ.v.s + MAP.x0), dz: best.p[1] - ((py - OZ.v.oy) / OZ.v.s + MAP.z0) }; // (la prise reste sous le doigt)
     $('ozCv').setPointerCapture(e.pointerId);
@@ -177,16 +181,16 @@ function ozDel() {
 /* Annuler les retouches : la carte revient aux zones du jeu */
 function ozReset() {
   const B = OZ.base[OZ.id]; if (!B) return;
-  OZ.maps[OZ.id] = { mecha: B.mecha.map((p) => p.slice()), dom: B.dom.map((p) => p.slice()), edited: false }; OZ.sel = null; ozSave(); ozDraw();
+  OZ.maps[OZ.id] = { mecha: B.mecha.map((p) => p.slice()), dom: B.dom.map((p) => p.slice()), bomb: B.bomb.map((p) => p.slice()), edited: false }; OZ.sel = null; ozSave(); ozDraw();
 }
 function ozSave() {
-  const o = {}; for (const id in OZ.maps) if (OZ.maps[id].edited) o[id] = { mecha: OZ.maps[id].mecha, dom: OZ.maps[id].dom };
+  const o = {}; for (const id in OZ.maps) if (OZ.maps[id].edited) o[id] = { mecha: OZ.maps[id].mecha, dom: OZ.maps[id].dom, bomb: OZ.maps[id].bomb };
   try { localStorage.setItem(OZ_KEY, JSON.stringify(o)); } catch (e) { /* stockage indisponible : les retouches durent le temps de la page */ }
 }
 /* Le texte à renvoyer : les cartes retouchées (au moins celle qui est affichée) */
 function ozText() {
   const f = (L) => '[' + L.map(([x, z]) => `[${x}, ${z}]`).join(', ') + ']';
-  return Object.keys(OZ.maps).filter((id) => OZ.maps[id].edited || id === OZ.id).map((id) => `${id} mecha ${f(OZ.maps[id].mecha)} dom ${f(OZ.maps[id].dom)}`).join('\n');
+  return Object.keys(OZ.maps).filter((id) => OZ.maps[id].edited || id === OZ.id).map((id) => `${id} mecha ${f(OZ.maps[id].mecha)} dom ${f(OZ.maps[id].dom)} bomb ${f(OZ.maps[id].bomb || [])}`).join('\n');
 }
 function ozCopy() {
   const t = ozText();

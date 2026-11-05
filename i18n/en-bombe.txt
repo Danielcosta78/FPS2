@@ -1,0 +1,9 @@
+# Mode bombe (src/09ib-bombe.js) et ses sites dans l'outil des zones (src/09zn-outil-zones.js)
+Pose de bombe ⇒ Bomb plant
+Pose de bombe, deux sites à attaquer ou à défendre ⇒ Bomb plant, two sites to attack or defend
+6 contre 6, une seule vie par manche ⇒ 6 vs 6, one life per round
+Manches à gagner ⇒ Rounds to win
+manches gagnées ⇒ rounds won
+Alpha attaque et pose la bombe sur un site, Bravo la défend. Une seule vie par manche. Le premier camp à la limite de manches l'emporte. ⇒ Alpha attacks and plants the bomb on a site, Bravo defends it. One life per round. The first side to reach the round limit wins.
+Sites de la bombe ⇒ Bomb sites
+Site de bombe {0} ⇒ Bomb site {0}
