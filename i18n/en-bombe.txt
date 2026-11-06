@@ -7,3 +7,26 @@ manches gagnées ⇒ rounds won
 Alpha attaque et pose la bombe sur un site, Bravo la défend. Une seule vie par manche. Le premier camp à la limite de manches l'emporte. ⇒ Alpha attacks and plants the bomb on a site, Bravo defends it. One life per round. The first side to reach the round limit wins.
 Sites de la bombe ⇒ Bomb sites
 Site de bombe {0} ⇒ Bomb site {0}
+La manche commence dans ⇒ The round starts in
+Manche {0} ⇒ Round {0}
+Changement de camp ⇒ Sides swapped
+Vous attaquez, posez la bombe sur un site ⇒ You attack, plant the bomb on a site
+Vous défendez les deux sites ⇒ You defend both sites
+Vous portez la bombe ⇒ You carry the bomb
+Maintenez E pour poser la bombe ⇒ Hold E to plant the bomb
+Maintenez E pour désamorcer ⇒ Hold E to defuse
+Pose de la bombe ⇒ Planting the bomb
+Désamorçage ⇒ Defusing
+La bombe est posée sur le site {0} ⇒ The bomb is planted on site {0}
+Protégez la bombe ⇒ Protect the bomb
+Désamorcez la bombe avant qu'elle explose ⇒ Defuse the bomb before it explodes
+Attaquez et posez la bombe ⇒ Attack and plant the bomb
+Défendez les sites A et B ⇒ Defend sites A and B
+Éliminé, prochaine manche bientôt ⇒ Eliminated, next round soon
+{0} gagne la manche ⇒ {0} wins the round
+Les défenseurs sont éliminés ⇒ The defenders are eliminated
+Les attaquants sont éliminés ⇒ The attackers are eliminated
+La bombe a explosé ⇒ The bomb exploded
+La bombe est désamorcée ⇒ The bomb was defused
+Limite de manches atteinte ⇒ Round limit reached
+Explosion de la bombe ⇒ Bomb explosion
