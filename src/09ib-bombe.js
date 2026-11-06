@@ -3,20 +3,20 @@
    Alpha attaque d'abord et pose la bombe sur l'un des deux sites (A ou B), Bravo les défend. Une seule vie par manche, le premier camp à la
    limite de manches l'emporte ; les camps changent à la moitié. Ce fichier suit le modèle de la domination (09i-modes.js) : il s'y accroche
    sans réécrire les gros fichiers (modeStart, modeEnd, modeUpdate, domHud, domMinimap, spawnBase, respawnPlayer, killLimitReached, finKicker,
-   cdShow et pickGoal sont enveloppées plus bas, chacune dans un try : un nom qui changerait ailleurs ne casse pas le chargement du jeu).
+   cdShow, botChasing et pickGoal sont enveloppées plus bas, chacune dans un try : un nom qui changerait ailleurs ne casse pas le chargement du jeu).
    Le mode n'est enregistré qu'avec ?bomba=1 dans l'adresse, tant qu'il n'est pas terminé.
    Sites : MAP_DEFS.<id>.bomb [[x, z], [x, z]], sinon bombDefaults ; ils se placent avec l'outil des zones (?outil=zones, 09zn-outil-zones.js).
    Une manche (BOMB.phase) : 'live' (la bombe est au porteur, chrono de manche), 'planted' (la bombe tourne, chrono de mise à feu), 'over'
    (annonce, BOMB.endLen secondes, puis bombNewRound : tout le monde réapparaît et le décompte du départ (09y-decompte.js) rejoue).
-   Pose et désamorçage : tenir E dans la zone (au tactile et à la manette : rester immobile). Les bots, eux, tiennent la position, au calme (sans
-   adversaire en vue) ; leurs buts viennent de bombGoal (pickGoal).
+   Pose et désamorçage : tenir E dans la zone (au tactile et à la manette : rester immobile). Un bot au calme (sans adversaire en vue) qui arrive
+   dans la zone s'arrête (bombBotHold) et pose ou désamorce ; ses buts viennent de bombGoal (pickGoal).
    À venir : phase 3 vue des équipiers après la mort ; phase 4 le salon en ligne.
    ========================================================================== */
 const BOMB_DEV = new URLSearchParams(location.search).get('bomba') === '1';
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
-  phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, P: null, prog: 0, progMe: false, allow: false,
+  phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planter: null, defuserBot: null, P: null, prog: 0, progMe: false, allow: false,
   said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
 };
 if (!(Settings.limitBomb > 0)) Settings.limitBomb = 7; // manches à gagner (MODES.bomb.key)
@@ -79,7 +79,7 @@ function bombClear() {
   BOMB.sites = []; BOMB.mk = [];
   bombBombClear();
   if (BOMB.ui) BOMB.ui.remove();
-  BOMB.ui = null; BOMB.phase = 'off'; BOMB.carrier = null; BOMB.prog = 0; BOMB.progMe = false;
+  BOMB.ui = null; BOMB.phase = 'off'; BOMB.carrier = null; BOMB.planter = null; BOMB.defuserBot = null; BOMB.prog = 0; BOMB.progMe = false;
 }
 
 /* ---------- Les manches ---------- */
@@ -88,7 +88,7 @@ function bombRoundSetup() {
   BOMB.round++;
   BOMB.swapAt = Math.floor((2 * (MATCH.limit > 0 ? MATCH.limit : Settings.limitBomb) - 1) / 2); // la moitié des manches possibles : après elles, les camps changent (MATCH.limit n'est posé qu'après modeStart)
   BOMB.att = BOMB.played < BOMB.swapAt ? 0 : 1; // l'équipe qui attaque
-  BOMB.phase = 'live'; BOMB.t = BOMB.roundLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.carrier = null; BOMB.target = Math.random() < 0.5 ? 0 : 1; BOMB.sayT = 0;
+  BOMB.phase = 'live'; BOMB.t = BOMB.roundLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.carrier = null; BOMB.planter = null; BOMB.defuserBot = null; BOMB.target = Math.random() < 0.5 ? 0 : 1; BOMB.sayT = 0;
   bombBombClear();
 }
 /* Manche suivante : tout le monde réapparaît (en formation, derrière son décompte), les camps changent à la moitié */
@@ -115,6 +115,9 @@ function bombChannel(e) {
   if (e.isPlayer) return !!KEYS.KeyE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
   return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
 }
+/* Un bot au calme (aucun adversaire en vue) qui roule en liberté : on lui fait tenir la position (holdT), il s'arrête et peut poser ou désamorcer.
+   Sans cela, il repartait vers un autre but dès qu'il arrivait près du site (le but d'un défenseur, la bombe, n'est pas un nœud du réseau). */
+function bombBotHold(e) { if (e.tactic !== 'roam' || e.visible) return false; e.holdT = Math.max(e.holdT, 0.4); return true; }
 /* Les bots qui roulent en liberté refont leur but (la bombe vient d'être posée, ou la manche recommence) */
 function bombReplan() { for (const e of entities) if (!e.isPlayer && !e.isRemote && e.alive && e.tactic === 'roam') { e.goal = null; e.path = null; e.holdT = 0; } }
 /* La bombe est au porteur : le joueur s'il attaque, sinon un bot au hasard ; s'il meurt, un autre attaquant vivant la prend (pas de bombe à ramasser au sol) */
@@ -125,14 +128,22 @@ function bombCarrierTick() {
   const me = PL.ent; BOMB.carrier = L.length ? (me.alive && me.team === BOMB.att ? me : pick(L)) : null; BOMB.prog = 0; BOMB.progMe = false; // le joueur qui attaque a la bombe
   if (BOMB.carrier && BOMB.carrier.isPlayer) bombSay(_t('Vous portez la bombe'), '', '#fff', 2.5);
 }
+/* Le bot qui va poser : un attaquant vivant (pas le joueur), choisi au hasard ; s'il meurt, un autre prend le relais */
+function bombPlanterTick() {
+  const c = BOMB.planter;
+  if (c && c.alive) return;
+  const L = entities.filter((e) => e.alive && !e.off && !e.isPlayer && !e.isRemote && e.team === BOMB.att);
+  BOMB.planter = L.length ? pick(L) : null;
+  if (BOMB.planter && BOMB.planter.tactic === 'roam') { BOMB.planter.goal = null; BOMB.planter.path = null; BOMB.planter.holdT = 0; }
+}
 /* Qui pose : un attaquant vivant dans un site qui tient l'action (le joueur d'abord). La bombe n'est pas un objet qu'on ramasse : le porteur
-   (BOMB.carrier) ne sert qu'à dire quel bot va poser, et n'importe quel attaquant peut la poser. */
+   (BOMB.carrier) ne sert qu'à dire qui l'a, et n'importe quel attaquant peut la poser. */
 function bombPlantTick(dt) {
   let by = null, site = null;
   for (const e of entities) {
     if (!e.alive || e.off || e.isRemote || e.team !== BOMB.att || e.onGround === false) continue;
     const s = bombSiteAt(e);
-    if (s && bombChannel(e)) { by = e; site = s; if (e.isPlayer) break; }
+    if (s && (e.isPlayer ? bombChannel(e) : bombBotHold(e))) { by = e; site = s; if (e.isPlayer) break; }
   }
   if (by) { BOMB.prog += dt; BOMB.progMe = !!by.isPlayer; if (BOMB.prog >= BOMB.plantT) bombPlant(site, by); }
   else { BOMB.prog = 0; BOMB.progMe = false; }
@@ -163,7 +174,7 @@ function bombFuseTick(dt) {
   let by = null;
   for (const e of entities) {
     if (!e.alive || e.off || e.isRemote || e.team === BOMB.att) continue;
-    if (hyp(e.pos.x - P.x, e.pos.z - P.z) < 2.6 && Math.abs(e.pos.y - P.y) < 1.6 && bombChannel(e)) { by = e; if (e.isPlayer) break; }
+    if (hyp(e.pos.x - P.x, e.pos.z - P.z) < 2.6 && Math.abs(e.pos.y - P.y) < 1.6 && (e.isPlayer ? bombChannel(e) : bombBotHold(e))) { by = e; if (e.isPlayer) break; }
   }
   if (by) { BOMB.prog += dt; BOMB.progMe = !!by.isPlayer; if (BOMB.prog >= BOMB.defuseT) { bombEnd(1 - BOMB.att, 'defused'); return; } }
   else { BOMB.prog = 0; BOMB.progMe = false; }
@@ -205,6 +216,8 @@ function bombUpdate(dt) {
   }
   for (const e of entities) if (e.bombHold && e.goal && e.goal.hold) { e.goal.holdFor = e.bombHold.f; e.goal.look = e.bombHold.l; } // (setPath copie hold et dom seulement : la durée et le regard de la tenue)
   bombCarrierTick();
+  if (BOMB.phase === 'live') bombPlanterTick();
+  else if (BOMB.P) { const d = bombDefuser(); if (d !== BOMB.defuserBot) { BOMB.defuserBot = d; if (d && d.tactic === 'roam') { d.goal = null; d.path = null; d.holdT = 0; } } } // le défenseur le plus proche change : il refait son but
   const da = bombAlive(1 - BOMB.att), aa = bombAlive(BOMB.att);
   if (BOMB.phase === 'live') {
     BOMB.t -= dt; bombPlantTick(dt);
@@ -259,7 +272,7 @@ function bombDefuser() {
   }
   return best;
 }
-/* Où aller (pickGoal) : le porteur au site visé, qu'il tient le temps de poser ; les autres attaquants couvrent ce site ; les défenseurs
+/* Où aller (pickGoal) : le bot poseur au site visé, qu'il tient le temps de poser ; les autres attaquants couvrent ce site ; les défenseurs
    tiennent chacun un site, face à l'arrivée adverse ; la bombe posée, les attaquants la gardent et un défenseur va la désamorcer.
    setPath (07-bots.js) ne recopie du but que hold et dom : la durée (holdFor) et le regard (look) de la tenue sont gardés dans b.bombHold,
    puis remis sur le but du bot par bombUpdate. */
@@ -275,12 +288,12 @@ function bombGoalPick(b) {
   if (P) {
     const s = S[P.site];
     if (att) { g = bombSpot(s, 3, BOMB.rad + 3); g.hold = true; g.holdFor = rand(5, 9); g.look = { x: s.x + rand(-10, 10), z: s.z + rand(-10, 10) }; }
-    else if (bombDefuser() === b) { g = new V3(P.x, P.y, P.z); g.hold = true; g.holdFor = BOMB.defuseT + 2; }
+    else if (bombDefuser() === b) { const id = navNode(P.x, P.y, P.z); g = id >= 0 ? new V3(NAV.nx[id], NAV.ny[id], NAV.nz[id]) : new V3(P.x, P.y, P.z); g.hold = true; g.holdFor = BOMB.defuseT + 2; } // (un nœud du réseau : la bombe n'en est pas un, et le bot ne s'arrêterait jamais à moins de 2 m)
     else { g = bombSpot(s, 5, BOMB.rad + 6); g.hold = true; g.holdFor = rand(3, 6); }
     return g;
   }
   if (att) {
-    const c = BOMB.carrier === b, s = c ? S[BOMB.target] : S[Math.random() < 0.7 ? BOMB.target : 1 - BOMB.target];
+    const c = BOMB.planter === b, s = c ? S[BOMB.target] : S[Math.random() < 0.7 ? BOMB.target : 1 - BOMB.target];
     g = bombSpot(s, 0.5, c ? 2.5 : BOMB.rad - 1.5); g.hold = true; g.holdFor = c ? BOMB.plantT + 1.5 : rand(3, 6);
     return g;
   }
@@ -307,6 +320,8 @@ try { const f = respawnPlayer; respawnPlayer = function () { if (MATCH.mode === 
 try { const f = killLimitReached; killLimitReached = function () { return MATCH.mode === 'bomb' ? false : f(); }; } catch (e) { console.warn('bombe : killLimitReached', e); }
 try { const f = finKicker; finKicker = function () { return MATCH.mode === 'bomb' && finByLimit() ? _t('Limite de manches atteinte') : f(); }; } catch (e) { console.warn('bombe : finKicker', e); }
 try { const f = cdShow; cdShow = function (n, first) { f(n, first); if (MATCH.mode === 'bomb') $('cdKick').textContent = _t('La manche commence dans'); }; } catch (e) { console.warn('bombe : cdShow', e); }
+// pas de poursuite d'un adversaire perdu de vue (botChasing, 07b-tactics.js) : les bots suivent l'objectif, comme en domination
+try { const f = botChasing; botChasing = function (b, now, D) { return MATCH.mode === 'bomb' ? false : f(b, now, D); }; } catch (e) { console.warn('bombe : botChasing', e); }
 try { const f = pickGoal; pickGoal = function (b, now) { if (MATCH.mode === 'bomb') { const g = bombGoal(b, now); if (g) return g; } return f(b, now); }; } catch (e) { console.warn('bombe : pickGoal', e); }
 
 /* Image par image : le repère de chaque site à l'écran (lettre et distance) */
