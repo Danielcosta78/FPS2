@@ -31,3 +31,5 @@ La bombe est désamorcée ⇒ The bomb was defused
 Limite de manches atteinte ⇒ Round limit reached
 Explosion de la bombe ⇒ Bomb explosion
 Vous regardez {0}, clic pour changer ⇒ You are watching {0}, click to switch
+Bombe plantée, site {0} ⇒ Bomb planted, site {0}
+Bombe désamorcée ⇒ Bomb defused

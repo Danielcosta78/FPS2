@@ -4,20 +4,25 @@
    limite de manches l'emporte ; les camps changent à la moitié. Ce fichier suit le modèle de la domination (09i-modes.js) : il s'y accroche
    sans réécrire les gros fichiers (modeStart, modeEnd, modeUpdate, domHud, domMinimap, spawnBase, respawnPlayer, killLimitReached, finKicker,
    cdShow, botChasing et pickGoal sont enveloppées plus bas, chacune dans un try : un nom qui changerait ailleurs ne casse pas le chargement du jeu).
-   Le mode n'est enregistré qu'avec ?bomba=1 dans l'adresse, tant qu'il n'est pas terminé.
+   Le mode n'est enregistré qu'avec ?bomba=1 dans l'adresse (gardé ensuite, voir bombFlag), tant qu'il n'est pas terminé.
    Sites : MAP_DEFS.<id>.bomb [[x, z], [x, z]], sinon bombDefaults ; ils se placent avec l'outil des zones (?outil=zones, 09zn-outil-zones.js).
    Une manche (BOMB.phase) : 'live' (la bombe est au porteur, chrono de manche), 'planted' (la bombe tourne, chrono de mise à feu), 'over'
    (annonce, BOMB.endLen secondes, puis bombNewRound : tout le monde réapparaît et le décompte du départ (09y-decompte.js) rejoue).
    Pose et désamorçage : tenir E dans la zone (au tactile et à la manette : rester immobile). Un bot au calme (sans adversaire en vue) qui arrive
    dans la zone s'arrête (bombBotHold) et pose ou désamorce ; ses buts viennent de bombGoal (pickGoal).
-   À venir : phase 3 vue des équipiers après la mort ; phase 4 le salon en ligne.
+   Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes et chrono de la bombe), 09ie (le jeu en ligne).
    ========================================================================== */
-const BOMB_DEV = new URLSearchParams(location.search).get('bomba') === '1';
+/* Le drapeau du mode : ?bomba=1 l'allume et le garde (localStorage : le lien d'invitation d'un salon n'a pas le paramètre), ?bomba=0 l'éteint */
+function bombFlag() {
+  const q = new URLSearchParams(location.search).get('bomba');
+  try { if (q === '1') localStorage.setItem('dc_bomba', '1'); else if (q === '0') localStorage.removeItem('dc_bomba'); return q === '1' || (q !== '0' && localStorage.getItem('dc_bomba') === '1'); } catch (e) { return q === '1'; }
+}
+const BOMB_DEV = bombFlag();
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
   phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planter: null, defuserBot: null, P: null, prog: 0, progMe: false, allow: false,
-  said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
+  why: '', winner: -1, said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
 };
 if (!(Settings.limitBomb > 0)) Settings.limitBomb = 7; // manches à gagner (MODES.bomb.key)
 if (BOMB_DEV) {
@@ -91,18 +96,25 @@ function bombRoundSetup() {
   BOMB.phase = 'live'; BOMB.t = BOMB.roundLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.carrier = null; BOMB.planter = null; BOMB.defuserBot = null; BOMB.target = Math.random() < 0.5 ? 0 : 1; BOMB.sayT = 0;
   bombBombClear();
 }
+/* Le monde de la manche d'avant : grenades, couteaux, fumigènes, bruits */
+function bombWorldClear() {
+  for (const n of NADES) scene.remove(n.mesh);
+  NADES.length = 0; SMOKES.length = 0; soundEvents.length = 0; clearThrowKnives();
+}
+/* Le joueur de ce poste réapparaît (la réapparition est bloquée en cours de manche : respawnPlayer enveloppée plus bas) */
+function bombRespawnMe() { if (KC.active) kcAbort(); KC.pending = null; BOMB.allow = true; respawnPlayer(); BOMB.allow = false; PL.deathT = 0; }
 /* Manche suivante : tout le monde réapparaît (en formation, derrière son décompte), les camps changent à la moitié */
 function bombNewRound() {
   BOMB.swapped = BOMB.played === BOMB.swapAt;
   bombRoundSetup();
-  for (const n of NADES) scene.remove(n.mesh); // le monde de la manche d'avant : grenades, couteaux, fumigènes, bruits
-  NADES.length = 0; SMOKES.length = 0; soundEvents.length = 0; clearThrowKnives();
+  bombWorldClear();
   OPEN.on = true;
-  for (const e of entities) if (!e.isPlayer && !e.off && !e.isRemote) e.alive = false; // (les survivants ne bloquent pas les places de départ des autres : spawnOpening)
+  const lan = MATCH.online && NET.on; // en ligne, seuls les bots de l'hôte (netBot) jouent : les autres restent hors jeu
+  for (const e of entities) if (!e.isPlayer && !e.off && !e.isRemote && (!lan || e.netBot)) e.alive = false; // (les survivants ne bloquent pas les places de départ des autres : spawnOpening)
   for (const e of entities) {
     if (e.off || e.isRemote) continue;
-    if (e.isPlayer) { if (KC.active) kcAbort(); KC.pending = null; BOMB.allow = true; respawnPlayer(); BOMB.allow = false; PL.deathT = 0; }
-    else { spawnEntity(e); e.goal = null; e.path = null; e.holdT = 0; e.bombHold = null; } // (spawnEntity refait déjà ses tactiques : initTactics)
+    if (e.isPlayer) bombRespawnMe();
+    else if (!lan || e.netBot) { spawnEntity(e); e.goal = null; e.path = null; e.holdT = 0; e.bombHold = null; } // (spawnEntity refait déjà ses tactiques : initTactics)
   }
   bombUi();
   cdStart();
@@ -180,26 +192,41 @@ function bombFuseTick(dt) {
   else { BOMB.prog = 0; BOMB.progMe = false; }
   if (P.t <= 0) { bombBlow(); bombEnd(BOMB.att, 'boom'); }
 }
-/* Explosion : le feu et le bruit, et des dégâts qui baissent avec la distance (les coéquipiers du poseur sont épargnés) */
-function bombBlow() {
-  const P = BOMB.P, pos = new V3(P.x, P.y + 0.3, P.z);
+/* Explosion : le feu et le bruit, et des dégâts qui baissent avec la distance ; l'équipe qui attaque est épargnée. En ligne, chacun blesse ce qu'il
+   possède (son joueur, et les bots de l'hôte) : un joueur distant applique le sien chez lui (09ie-bombe-reseau.js), sinon le coup se perdrait. */
+function bombBlowFx(P) {
+  const pos = new V3(P.x, P.y + 0.3, P.z);
   explosionFx(pos, 1, true);
   for (let i = 0; i < 3; i++) explosionFx(pos.clone().add(new V3(rand(-3, 3), rand(0, 2), rand(-3, 3))), 1, true);
   sfxExplosion(pos); PL.shake = Math.max(PL.shake, 1.2);
+}
+function bombBlowHurt(P) {
+  const lan = MATCH.online && NET.on;
   for (const e of entities) {
-    if (!e.alive || e.off || allied(e, P.by)) continue;
+    if (!e.alive || e.off || e.team === BOMB.att || (lan && !netIsLocal(e))) continue;
     const d = hyp(e.pos.x - P.x, e.pos.z - P.z), k = 1 - d / BOMB.blast;
-    if (k > 0) applyDamage(e, 300 * k, P.by, _t('Explosion de la bombe'), false, new V3(e.pos.x - P.x, 0.4, e.pos.z - P.z).normalize());
+    if (k > 0) applyDamage(e, 300 * k, lan && !netIsLocal(P.by) ? e : P.by, _t('Explosion de la bombe'), false, new V3(e.pos.x - P.x, 0.4, e.pos.z - P.z).normalize());
   }
 }
+function bombBlow() { bombBlowFx(BOMB.P); bombBlowHurt(BOMB.P); }
 /* Fin de manche : le point, l'annonce, puis la manche suivante (ou la fin de partie si une équipe a atteint la limite) */
 function bombEnd(w, why) {
   if (BOMB.phase === 'over') return;
-  BOMB.phase = 'over'; BOMB.endT = BOMB.endLen; BOMB.prog = 0; BOMB.progMe = false;
+  BOMB.phase = 'over'; BOMB.endT = BOMB.endLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.why = why; BOMB.winner = w;
   MATCH.score[w]++; BOMB.played++;
+  bombEndSay(w, why);
+  if (MATCH.score[w] >= MATCH.limit) matchFinish();
+}
+/* L'annonce de fin de manche (chez tous : en ligne, les invités la rejouent d'après l'état de l'hôte) */
+function bombEndSay(w, why) {
   const sub = why === 'elim_def' ? _t('Les défenseurs sont éliminés') : why === 'elim_att' ? _t('Les attaquants sont éliminés') : why === 'boom' ? _t('La bombe a explosé') : why === 'defused' ? _t('La bombe est désamorcée') : _t('Temps écoulé');
   bombSay(_t('{0} gagne la manche', TEAM_NAMES[w]), sub, w === PL.ent.team ? '#8fd16a' : '#ff6a55', BOMB.endLen);
-  if (MATCH.score[w] >= MATCH.limit) matchFinish();
+}
+/* Le numéro de la manche et le rôle du joueur (chez tous : en ligne aussi, après le décompte) */
+function bombSayRound() {
+  BOMB.said = BOMB.round;
+  bombSay(_t('Manche {0}', BOMB.round), (BOMB.swapped ? _t('Changement de camp') + '. ' : '') + (PL.ent.team === BOMB.att ? _t('Vous attaquez, posez la bombe sur un site') : _t('Vous défendez les deux sites')), '#fff', 4);
+  BOMB.swapped = false;
 }
 function bombUpdate(dt) {
   if (BOMB.phase === 'off') return;
@@ -209,11 +236,7 @@ function bombUpdate(dt) {
     if (BOMB.endT <= 0) bombNewRound(); else bombUi();
     return;
   }
-  if (BOMB.said !== BOMB.round) { // première image de la manche (le décompte est fini) : le numéro et le rôle
-    BOMB.said = BOMB.round;
-    bombSay(_t('Manche {0}', BOMB.round), (BOMB.swapped ? _t('Changement de camp') + '. ' : '') + (PL.ent.team === BOMB.att ? _t('Vous attaquez, posez la bombe sur un site') : _t('Vous défendez les deux sites')), '#fff', 4);
-    BOMB.swapped = false; bombReplan();
-  }
+  if (BOMB.said !== BOMB.round) { bombSayRound(); bombReplan(); } // première image de la manche (le décompte est fini)
   for (const e of entities) if (e.bombHold && e.goal && e.goal.hold) { e.goal.holdFor = e.bombHold.f; e.goal.look = e.bombHold.l; } // (setPath copie hold et dom seulement : la durée et le regard de la tenue)
   bombCarrierTick();
   if (BOMB.phase === 'live') bombPlanterTick();
@@ -314,7 +337,7 @@ domMinimap = function (g, scale, yaw) { _bombDomMinimap(g, scale, yaw); bombMini
 try { const f = modeUpdate; modeUpdate = function (dt) { f(dt); if (MATCH.mode === 'bomb') bombUpdate(dt); }; } catch (e) { console.warn('bombe : modeUpdate', e); }
 // les camps : l'équipe qui attaque apparaît dans la base 0, l'autre dans la base 1 (les sites sont dans la moitié de la base 1)
 try { const f = spawnBase; spawnBase = function (t) { return MATCH.mode === 'bomb' ? (t === BOMB.att ? 0 : 1) : f(t); }; } catch (e) { console.warn('bombe : spawnBase', e); }
-// une seule vie par manche : le joueur ne réapparaît qu'au début de la manche suivante (bombNewRound lève BOMB.allow)
+// une seule vie par manche : le joueur ne réapparaît qu'au début de la manche suivante (bombRespawnMe lève BOMB.allow)
 try { const f = respawnPlayer; respawnPlayer = function () { if (MATCH.mode === 'bomb' && !BOMB.allow) return; f(); }; } catch (e) { console.warn('bombe : respawnPlayer', e); }
 // la partie se décide par les manches (bombEnd), pas par une élimination
 try { const f = killLimitReached; killLimitReached = function () { return MATCH.mode === 'bomb' ? false : f(); }; } catch (e) { console.warn('bombe : killLimitReached', e); }
