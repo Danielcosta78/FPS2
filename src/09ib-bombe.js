@@ -8,9 +8,9 @@
    Sites : MAP_DEFS.<id>.bomb [[x, z], [x, z]], sinon bombDefaults ; ils se placent avec l'outil des zones (?outil=zones, 09zn-outil-zones.js).
    Une manche (BOMB.phase) : 'live' (la bombe est au porteur, chrono de manche), 'planted' (la bombe tourne, chrono de mise à feu), 'over'
    (annonce, BOMB.endLen secondes, puis bombNewRound : tout le monde réapparaît et le décompte du départ (09y-decompte.js) rejoue).
-   Pose et désamorçage : tenir E dans la zone (au tactile et à la manette : rester immobile). Les bots, eux, tiennent la position (holdT) ;
-   leurs buts viennent de bombGoal (pickGoal).
-   À venir : phase 3 réglages fins des bots et vue des équipiers ; phase 4 le salon en ligne.
+   Pose et désamorçage : tenir E dans la zone (au tactile et à la manette : rester immobile). Les bots, eux, tiennent la position, au calme (sans
+   adversaire en vue) ; leurs buts viennent de bombGoal (pickGoal).
+   À venir : phase 3 vue des équipiers après la mort ; phase 4 le salon en ligne.
    ========================================================================== */
 const BOMB_DEV = new URLSearchParams(location.search).get('bomba') === '1';
 const BOMB = {
@@ -67,7 +67,6 @@ function bombInit() {
   BOMB.ui = ui; BOMB.uiT = ui.children[0]; BOMB.uiS = ui.children[1]; BOMB.uiB = ui.children[2]; BOMB.uiF = ui.children[2].firstChild;
   // les manches
   BOMB.round = 0; BOMB.played = 0; BOMB.said = 0; BOMB.swapped = false;
-  BOMB.swapAt = Math.floor((2 * (MATCH.limit || Settings.limitBomb) - 1) / 2); // la moitié des manches possibles : après elles, les camps changent
   bombRoundSetup();
 }
 function bombClear() {
@@ -87,6 +86,7 @@ function bombClear() {
 /* État d'une nouvelle manche (le premier appel : bombInit, avant le déploiement ; les suivants : bombNewRound) */
 function bombRoundSetup() {
   BOMB.round++;
+  BOMB.swapAt = Math.floor((2 * (MATCH.limit > 0 ? MATCH.limit : Settings.limitBomb) - 1) / 2); // la moitié des manches possibles : après elles, les camps changent (MATCH.limit n'est posé qu'après modeStart)
   BOMB.att = BOMB.played < BOMB.swapAt ? 0 : 1; // l'équipe qui attaque
   BOMB.phase = 'live'; BOMB.t = BOMB.roundLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.carrier = null; BOMB.target = Math.random() < 0.5 ? 0 : 1; BOMB.sayT = 0;
   bombBombClear();
@@ -95,22 +95,25 @@ function bombRoundSetup() {
 function bombNewRound() {
   BOMB.swapped = BOMB.played === BOMB.swapAt;
   bombRoundSetup();
+  for (const n of NADES) scene.remove(n.mesh); // le monde de la manche d'avant : grenades, couteaux, fumigènes, bruits
+  NADES.length = 0; SMOKES.length = 0; soundEvents.length = 0; clearThrowKnives();
   OPEN.on = true;
+  for (const e of entities) if (!e.isPlayer && !e.off && !e.isRemote) e.alive = false; // (les survivants ne bloquent pas les places de départ des autres : spawnOpening)
   for (const e of entities) {
     if (e.off || e.isRemote) continue;
     if (e.isPlayer) { if (KC.active) kcAbort(); KC.pending = null; BOMB.allow = true; respawnPlayer(); BOMB.allow = false; PL.deathT = 0; }
-    else { spawnEntity(e); initTactics(e); e.goal = null; e.path = null; e.holdT = 0; e.sq = null; }
+    else { spawnEntity(e); e.goal = null; e.path = null; e.holdT = 0; e.bombHold = null; } // (spawnEntity refait déjà ses tactiques : initTactics)
   }
   bombUi();
   cdStart();
 }
 function bombAlive(t) { let n = 0; for (const e of entities) if (e.alive && !e.off && e.team === t) n++; return n; }
 function bombSiteAt(e) { for (const s of BOMB.sites) if (hyp(e.pos.x - s.x, e.pos.z - s.z) < BOMB.rad - 0.4 && Math.abs(e.pos.y - s.y) < DOM.dy + 1) return s; return null; }
-/* Le soldat tient-il l'action ? Le joueur : la touche E (au tactile et à la manette, rester immobile) ; un bot : il tient sa position (holdT) */
+/* Le soldat tient-il l'action ? Le joueur : la touche E (au tactile et à la manette, rester immobile) ; un bot : en place et sans adversaire en vue */
 function bombChannel(e) {
   if (!e.alive) return false;
   if (e.isPlayer) return !!KEYS.KeyE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
-  return e.holdT > 0;
+  return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
 }
 /* Les bots qui roulent en liberté refont leur but (la bombe vient d'être posée, ou la manche recommence) */
 function bombReplan() { for (const e of entities) if (!e.isPlayer && !e.isRemote && e.alive && e.tactic === 'roam') { e.goal = null; e.path = null; e.holdT = 0; } }
@@ -195,6 +198,7 @@ function bombUpdate(dt) {
     bombSay(_t('Manche {0}', BOMB.round), (BOMB.swapped ? _t('Changement de camp') + '. ' : '') + (PL.ent.team === BOMB.att ? _t('Vous attaquez, posez la bombe sur un site') : _t('Vous défendez les deux sites')), '#fff', 4);
     BOMB.swapped = false; bombReplan();
   }
+  for (const e of entities) if (e.bombHold && e.goal && e.goal.hold) { e.goal.holdFor = e.bombHold.f; e.goal.look = e.bombHold.l; } // (setPath copie hold et dom seulement : la durée et le regard de la tenue)
   bombCarrierTick();
   const da = bombAlive(1 - BOMB.att), aa = bombAlive(BOMB.att);
   if (BOMB.phase === 'live') {
@@ -251,8 +255,15 @@ function bombDefuser() {
   return best;
 }
 /* Où aller (pickGoal) : le porteur au site visé, qu'il tient le temps de poser ; les autres attaquants couvrent ce site ; les défenseurs
-   tiennent chacun un site, face à l'arrivée adverse ; la bombe posée, les attaquants la gardent et un défenseur va la désamorcer */
+   tiennent chacun un site, face à l'arrivée adverse ; la bombe posée, les attaquants la gardent et un défenseur va la désamorcer.
+   setPath (07-bots.js) ne recopie du but que hold et dom : la durée (holdFor) et le regard (look) de la tenue sont gardés dans b.bombHold,
+   puis remis sur le but du bot par bombUpdate. */
 function bombGoal(b, now) {
+  const g = bombGoalPick(b);
+  b.bombHold = g ? { f: g.holdFor, l: g.look } : null;
+  return g;
+}
+function bombGoalPick(b) {
   const S = BOMB.sites, P = BOMB.P, att = b.team === BOMB.att;
   if (!S.length || BOMB.phase === 'off' || BOMB.phase === 'over') return null;
   let g;
