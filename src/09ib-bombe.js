@@ -117,20 +117,25 @@ function bombChannel(e) {
 }
 /* Les bots qui roulent en liberté refont leur but (la bombe vient d'être posée, ou la manche recommence) */
 function bombReplan() { for (const e of entities) if (!e.isPlayer && !e.isRemote && e.alive && e.tactic === 'roam') { e.goal = null; e.path = null; e.holdT = 0; } }
-/* La bombe est au porteur ; s'il meurt, un autre attaquant vivant la prend (pas de bombe à ramasser au sol : un attaquant la récupère aussitôt) */
+/* La bombe est au porteur : le joueur s'il attaque, sinon un bot au hasard ; s'il meurt, un autre attaquant vivant la prend (pas de bombe à ramasser au sol) */
 function bombCarrierTick() {
   const c = BOMB.carrier;
   if (BOMB.phase !== 'live' || (c && c.alive)) return;
   const L = entities.filter((e) => e.alive && !e.off && e.team === BOMB.att);
-  BOMB.carrier = L.length ? pick(L) : null; BOMB.prog = 0; BOMB.progMe = false;
+  const me = PL.ent; BOMB.carrier = L.length ? (me.alive && me.team === BOMB.att ? me : pick(L)) : null; BOMB.prog = 0; BOMB.progMe = false; // le joueur qui attaque a la bombe
   if (BOMB.carrier && BOMB.carrier.isPlayer) bombSay(_t('Vous portez la bombe'), '', '#fff', 2.5);
 }
+/* Qui pose : un attaquant vivant dans un site qui tient l'action (le joueur d'abord). La bombe n'est pas un objet qu'on ramasse : le porteur
+   (BOMB.carrier) ne sert qu'à dire quel bot va poser, et n'importe quel attaquant peut la poser. */
 function bombPlantTick(dt) {
-  const c = BOMB.carrier, s = c && c.alive ? bombSiteAt(c) : null;
-  if (s && bombChannel(c) && c.onGround !== false) {
-    BOMB.prog += dt; BOMB.progMe = !!c.isPlayer;
-    if (BOMB.prog >= BOMB.plantT) bombPlant(s, c);
-  } else { BOMB.prog = 0; BOMB.progMe = false; }
+  let by = null, site = null;
+  for (const e of entities) {
+    if (!e.alive || e.off || e.isRemote || e.team !== BOMB.att || e.onGround === false) continue;
+    const s = bombSiteAt(e);
+    if (s && bombChannel(e)) { by = e; site = s; if (e.isPlayer) break; }
+  }
+  if (by) { BOMB.prog += dt; BOMB.progMe = !!by.isPlayer; if (BOMB.prog >= BOMB.plantT) bombPlant(site, by); }
+  else { BOMB.prog = 0; BOMB.progMe = false; }
 }
 function bombPlant(s, c) {
   const g = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.2, 0.3), new THREE.MeshBasicMaterial({ color: 0x2b2f2a }));
@@ -224,7 +229,7 @@ function bombStatus() {
     return hyp(me.pos.x - BOMB.P.x, me.pos.z - BOMB.P.z) < 2.6 ? _t('Maintenez E pour désamorcer') : _t('Désamorcez la bombe avant qu\u0027elle explose');
   }
   if (BOMB.phase !== 'live') return '';
-  if (att) return BOMB.carrier === me ? (bombSiteAt(me) ? _t('Maintenez E pour poser la bombe') : _t('Vous portez la bombe')) : _t('Attaquez et posez la bombe');
+  if (att) return bombSiteAt(me) ? _t('Maintenez E pour poser la bombe') : BOMB.carrier === me ? _t('Vous portez la bombe') : _t('Attaquez et posez la bombe');
   return _t('Défendez les sites A et B');
 }
 function bombUi() {
