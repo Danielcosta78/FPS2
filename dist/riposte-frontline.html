@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-jWaQLlH+lpvnX0pRsRoX6EQYQ40SoLu2ufN2CAXmM7I=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' https://cdn.jsdelivr.net/npm/peerjs@1.5.5/; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-sRav9Ve4RQ1IuPmw4oCmPuT3hlnr298vY3kJkiEO6fU=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' https://cdn.jsdelivr.net/npm/peerjs@1.5.5/; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Riposte">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="cod-relay" content="">
-<meta name="cod-build" content="8933d37ac963">
+<meta name="cod-build" content="534cf62c9c12">
 <meta name="menu-music" content="menu-theme.mp3?v=1b342264">
 <title>Riposte: Frontline, FPS gratuit dans le navigateur</title>
 <!-- Aperçu d'un lien partagé (Discord, WhatsApp, réseaux) et adresse de référence : adresse et image posées par build.py (SITE, assets/apercu.jpg).
@@ -8005,8 +8005,10 @@ function bombAlive(t){let n=0;for(const e of entities)if(e.alive&&!e.off&&e.team
 function bombSiteAt(e){for(const s of BOMB.sites)if(hyp(e.pos.x-s.x,e.pos.z-s.z)<BOMB.rad-0.4&&Math.abs(e.pos.y-s.y)<DOM.dy+1)return s;return null;}
 function bombChannel(e){if(!e.alive)return false;if(e.isPlayer)return!!KEYS.KeyE||((TOUCH.on||PAD.drive)&&hyp(e.vel.x,e.vel.z)<0.6);return!e.visible&&(e.holdT>0||hyp(e.vel.x,e.vel.z)<0.5);}
 function bombReplan(){for(const e of entities)if(!e.isPlayer&&!e.isRemote&&e.alive&&e.tactic==='roam'){e.goal=null;e.path=null;e.holdT=0;}}
-function bombCarrierTick(){const c=BOMB.carrier;if(BOMB.phase!=='live'||(c&&c.alive))return;const L=entities.filter((e)=>e.alive&&!e.off&&e.team===BOMB.att);BOMB.carrier=L.length?pick(L):null;BOMB.prog=0;BOMB.progMe=false;if(BOMB.carrier&&BOMB.carrier.isPlayer)bombSay(_t('Vous portez la bombe'),'','#fff',2.5);}
-function bombPlantTick(dt){const c=BOMB.carrier,s=c&&c.alive?bombSiteAt(c):null;if(s&&bombChannel(c)&&c.onGround!==false){BOMB.prog+=dt;BOMB.progMe=!!c.isPlayer;if(BOMB.prog>=BOMB.plantT)bombPlant(s,c);}else{BOMB.prog=0;BOMB.progMe=false;}}
+function bombCarrierTick(){const c=BOMB.carrier;if(BOMB.phase!=='live'||(c&&c.alive))return;const L=entities.filter((e)=>e.alive&&!e.off&&e.team===BOMB.att);const me=PL.ent;BOMB.carrier=L.length?(me.alive&&me.team===BOMB.att?me:pick(L)):null;BOMB.prog=0;BOMB.progMe=false;if(BOMB.carrier&&BOMB.carrier.isPlayer)bombSay(_t('Vous portez la bombe'),'','#fff',2.5);}
+function bombPlantTick(dt){let by=null,site=null;for(const e of entities){if(!e.alive||e.off||e.isRemote||e.team!==BOMB.att||e.onGround===false)continue;const s=bombSiteAt(e);if(s&&bombChannel(e)){by=e;site=s;if(e.isPlayer)break;}}
+if(by){BOMB.prog+=dt;BOMB.progMe=!!by.isPlayer;if(BOMB.prog>=BOMB.plantT)bombPlant(site,by);}
+else{BOMB.prog=0;BOMB.progMe=false;}}
 function bombPlant(s,c){const g=new THREE.Group(),body=new THREE.Mesh(new THREE.BoxGeometry(0.46,0.2,0.3),new THREE.MeshBasicMaterial({color:0x2b2f2a}));body.position.y=0.1;g.add(body);const led=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,6),new THREE.MeshBasicMaterial({color:0xff3020}));led.position.set(0.14,0.23,0);g.add(led);g.position.set(c.pos.x,c.pos.y,c.pos.z);mapAdd(g);BOMB.P={site:s.i,x:c.pos.x,y:c.pos.y,z:c.pos.z,t:BOMB.fuse,tick:0,on:0,by:c,obj:g,led};BOMB.phase='planted';BOMB.prog=0;BOMB.progMe=false;bombSay(_t('La bombe est posée sur le site {0}',s.name),'','#fff',3.5);sfxClick(null,1500,0.35);bombReplan();}
 function bombBombClear(){const P=BOMB.P;if(P&&P.obj){if(P.obj.parent)P.obj.parent.remove(P.obj);P.obj.traverse((o)=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
 BOMB.P=null;}
@@ -8023,7 +8025,7 @@ for(const e of entities)if(e.bombHold&&e.goal&&e.goal.hold){e.goal.holdFor=e.bom
 bombCarrierTick();const da=bombAlive(1-BOMB.att),aa=bombAlive(BOMB.att);if(BOMB.phase==='live'){BOMB.t-=dt;bombPlantTick(dt);if(BOMB.phase==='live'){if(da===0&&aa>0)bombEnd(BOMB.att,'elim_def');else if(aa===0)bombEnd(1-BOMB.att,'elim_att');else if(BOMB.t<=0)bombEnd(1-BOMB.att,'time');}}else if(da===0)bombEnd(BOMB.att,'elim_def');else bombFuseTick(dt);MATCH.timeLeft=Math.max(1,BOMB.phase==='planted'&&BOMB.P?BOMB.P.t:BOMB.t);bombUi();}
 function bombSay(title,sub,col,secs){BOMB.sayTitle=title;BOMB.sayS=sub;BOMB.sayC=col;BOMB.sayT=secs;}
 function bombStatus(){const me=PL.ent,att=me.team===BOMB.att;if(!me.alive)return _t('Éliminé, prochaine manche bientôt');if(BOMB.phase==='planted'&&BOMB.P){if(att)return _t('Protégez la bombe');return hyp(me.pos.x-BOMB.P.x,me.pos.z-BOMB.P.z)<2.6?_t('Maintenez E pour désamorcer'):_t('Désamorcez la bombe avant qu\u0027elle explose');}
-if(BOMB.phase!=='live')return'';if(att)return BOMB.carrier===me?(bombSiteAt(me)?_t('Maintenez E pour poser la bombe'):_t('Vous portez la bombe')):_t('Attaquez et posez la bombe');return _t('Défendez les sites A et B');}
+if(BOMB.phase!=='live')return'';if(att)return bombSiteAt(me)?_t('Maintenez E pour poser la bombe'):BOMB.carrier===me?_t('Vous portez la bombe'):_t('Attaquez et posez la bombe');return _t('Défendez les sites A et B');}
 function bombUi(){if(!BOMB.ui)return;const say=BOMB.sayT>0,bar=BOMB.progMe&&BOMB.prog>0;hudText(BOMB.uiT,say?BOMB.sayTitle:'');hudStyle(BOMB.uiT,'color',BOMB.sayC);hudText(BOMB.uiS,bar?(BOMB.phase==='planted'?_t('Désamorçage'):_t('Pose de la bombe')):say?BOMB.sayS:bombStatus());hudStyle(BOMB.uiB,'display',bar?'block':'none');if(bar)hudStyle(BOMB.uiF,'transform',`scaleX(${clamp(BOMB.prog/(BOMB.phase==='planted'?BOMB.defuseT:BOMB.plantT),0,1).toFixed(3)})`);}
 function bombSpot(p,r0,r1){for(let k=0;k<8;k++){const a=rand(0,TAU),r=rand(r0,r1),x=p.x+Math.cos(a)*r,z=p.z+Math.sin(a)*r,id=navNode(x,p.y,z);if(id>=0&&NAV.comp[id]===NAV.mainComp&&hyp(NAV.nx[id]-x,NAV.nz[id]-z)<2&&Math.abs(NAV.ny[id]-p.y)<1.5)return new V3(NAV.nx[id],NAV.ny[id],NAV.nz[id]);}
 return new V3(p.x,p.y,p.z);}
