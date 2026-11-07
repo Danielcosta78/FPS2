@@ -5,7 +5,7 @@
    joueur réapparaît, le décompte repart, cdNetIn suit dans le même message), la bombe posée (avec son chrono), la fin de manche et l'explosion.
    Un invité qui pose ou désamorce (touche E, comme en solo) le demande à l'hôte par un événement ('bpl' ou 'bdf', par netEvent) ; l'hôte vérifie la
    position et l'état de la manche, puis décide. Les dégâts de l'explosion : chacun blesse ce qu'il possède (bombBlowHurt). Le score des manches
-   remplace le score de la partie : netUpdate (qui compte les éliminations) est tenue à l'écart. Chaque poste doit avoir le mode activé (?bomba=1 une fois).
+   remplace le score de la partie : netUpdate (qui compte les éliminations) est tenue à l'écart.
    Le même fichier, enveloppant des fonctions de 09c-net.js, de 09i-modes.js et de 09ib : chacune dans un try.
    ========================================================================== */
 const bombR1 = (v) => Math.round(v * 10) / 10, bombR2 = (v) => Math.round(v * 100) / 100;
