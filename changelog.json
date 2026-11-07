@@ -1,6 +1,52 @@
 [
   
   {
+    "version": "4.8.0",
+    "date": "2026-11-07",
+    "changes": [
+      {
+        "t": "new",
+        "x": "Nouveau mode de jeu Pose de bombe, avec deux sites à attaquer ou à défendre, une seule vie par manche et changement de camp à la moitié de la partie.",
+        "x_en": "New Bomb Plant game mode, with two sites to attack or defend, one life per round and sides swapped at the halfway point."
+      },
+      {
+        "t": "new",
+        "x": "Pose de la bombe en tenant la touche E dans un site, et désamorçage près d'elle, avec un bouton tactile sur téléphone et tablette.",
+        "x_en": "Plant the bomb by holding E inside a site and defuse it next to it, with a touch button on phone and tablet."
+      },
+      {
+        "t": "new",
+        "x": "Alerte de bombe plantée ou désamorcée, avec un chrono jusqu'à l'explosion dans le coin haut gauche à côté de la mini-carte, une icône de bombe et des sons.",
+        "x_en": "Bomb planted and defused alerts, with a countdown to the explosion in the top left corner next to the minimap, a bomb icon and sounds."
+      },
+      {
+        "t": "new",
+        "x": "Vue des équipiers après une élimination, avec un clic pour passer à l'équipier suivant jusqu'à la manche suivante.",
+        "x_en": "Teammate view after being eliminated, with a click to switch to the next teammate until the next round."
+      },
+      {
+        "t": "new",
+        "x": "Mode Pose de bombe en ligne, décidé par l'hôte pour tous les joueurs, avec la pose, le désamorçage, l'explosion et le score des manches synchronisés.",
+        "x_en": "Online Bomb Plant mode, decided by the host for all players, with planting, defusing, the explosion and the round score kept in sync."
+      },
+      {
+        "t": "new",
+        "x": "Outil des zones étendu aux sites de bombe, pour les placer à la souris sur chaque carte.",
+        "x_en": "Zone tool extended to bomb sites, to place them with the mouse on each map."
+      },
+      {
+        "t": "improved",
+        "x": "Bots plus attentifs à l'objectif, qui vont poser la bombe, la garder et la désamorcer au lieu de poursuivre les adversaires perdus de vue.",
+        "x_en": "Bots more focused on the objective, going to plant the bomb, guard it and defuse it instead of chasing opponents they have lost sight of."
+      },
+      {
+        "t": "improved",
+        "x": "Repères des sites relevés en haut de l'image pour ne pas masquer la vue, avec les mètres centrés dans la bulle.",
+        "x_en": "Site markers raised to the top of the screen so they do not block the view, with the distances centered in the bubble."
+      }
+    ]
+  },
+  {
     "version": "4.7.0",
     "date": "2026-11-04",
     "changes": [
