@@ -1,0 +1,95 @@
+name: V4 bomb team patch
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: V4
+      - name: Patch
+        run: |
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path('src/09ib-bombe.js')
+          t = p.read_text(encoding='utf-8')
+          a = """function bombChannel(e) {
+  if (!e.alive) return false;
+  if (e.isPlayer) return !!KEYS.KeyE || BOMB.touchE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
+  return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
+}"""
+          b = """function bombChannel(e) {
+  if (!e.alive) return false;
+  /* Joueur : pose / désamorçage automatiques dès qu'il est dans la zone (plus de touche E ni bouton) */
+  if (e.isPlayer) return true;
+  return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
+}"""
+          print('ch', a in t)
+          if a in t: t = t.replace(a, b, 1)
+          a = "  bombSay(_t('La bombe est posée sur le site {0}', s.name), '', '#fff', 3.5);\n  sfxClick(null, 1500, 0.35);\n  bombReplan();"
+          b = "  bombSay(_t('La bombe est posée sur le site {0}', s.name), '', '#fff', 3.5);\n  try { sfxBeep(1500, 1); setTimeout(() => sfxBeep(1500, 1), 230); } catch (e) { /* son */ }\n  sfxClick(null, 1500, 0.45);\n  bombReplan();"
+          print('pl', a in t)
+          if a in t: t = t.replace(a, b, 1)
+          if "why === 'defused') try { sfxBeep" not in t:
+            a = "  bombEndSay(w, why);"
+            b = "  bombEndSay(w, why);\n  if (why === 'defused') try { sfxBeep(900, 1); setTimeout(() => sfxBeep(1400, 1), 180); } catch (e) { /* son */ }"
+            print('df', a in t)
+            if a in t: t = t.replace(a, b, 1)
+          p.write_text(t, encoding='utf-8')
+
+          p = Path('src/01-core.js')
+          t = p.read_text(encoding='utf-8')
+          if 'team: 0,' not in t:
+            t = t.replace("skin: 'assault', lang:", "skin: 'assault', team: 0, lang:", 1)
+            print('team set', 'team: 0,' in t)
+          p.write_text(t, encoding='utf-8')
+
+          p = Path('src/09-game.js')
+          t = p.read_text(encoding='utf-8')
+          a = "else { PL.ent.team = 0; for (const e of entities) if (!e.isPlayer && !e.off) spawnEntity(e); }"
+          b = "else { PL.ent.team = Math.min(1, Math.max(0, Settings.team | 0)); for (const e of entities) if (!e.isPlayer && !e.off) spawnEntity(e); }"
+          print('sm', a in t)
+          if a in t: t = t.replace(a, b, 1)
+          p.write_text(t, encoding='utf-8')
+
+          p = Path('src/09e-menus.js')
+          t = p.read_text(encoding='utf-8')
+          a = "  if (!o.online || o.bots) rows.push({ k: 'note', cls: 'hint', text: DIFF_HINT[o.diff] });\n  rows.push(\n    { k: 'seg', full: true, key: 'limit',"
+          b = "  if (!o.online || o.bots) rows.push({ k: 'note', cls: 'hint', text: DIFF_HINT[o.diff] });\n  if (!ffa && !o.online) rows.push({ k: 'seg', full: true, key: 'team', label: _t('Votre équipe'), items: [[0, TEAM_NAMES[0]], [1, TEAM_NAMES[1]]], get: () => (o.team | 0), set: set('team'), disabled: dis });\n  rows.push(\n    { k: 'seg', full: true, key: 'limit',"
+          print('mr', a in t)
+          if a in t: t = t.replace(a, b, 1)
+          a = """function soloSet(k, v) {
+  if (k === 'mode') Settings.mode = v; else if (k === 'bots') Settings.difficulty = v; else if (k === 'limit') Settings[MODES[Settings.mode].key] = v; else Settings.minutes = v;
+  saveSettings();
+}
+function soloCfg() { const MD = MODES[Settings.mode] || MODES.tdm; return { map: Settings.map, mode: Settings.mode, diff: Settings.difficulty, limit: Settings[MD.key], time: Settings.minutes, online: false, edit: true, set: soloSet }; }"""
+          b = """function soloSet(k, v) {
+  if (k === 'mode') Settings.mode = v; else if (k === 'bots') Settings.difficulty = v; else if (k === 'limit') Settings[MODES[Settings.mode].key] = v; else if (k === 'team') Settings.team = Math.min(1, Math.max(0, +v | 0)); else Settings.minutes = v;
+  saveSettings();
+}
+function soloCfg() { const MD = MODES[Settings.mode] || MODES.tdm; return { map: Settings.map, mode: Settings.mode, diff: Settings.difficulty, limit: Settings[MD.key], time: Settings.minutes, team: Settings.team | 0, online: false, edit: true, set: soloSet }; }"""
+          print('ss', a in t)
+          if a in t: t = t.replace(a, b, 1)
+          a = """  return { head: `<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`, cols: [
+    { cls: 'ally', head: esc(TEAM_NAMES[0]), rows: [me, ...BOT_NAMES[0].map(bot)] },
+    { cls: 'enemy', head: esc(TEAM_NAMES[1]), rows: BOT_NAMES[1].map((n, i) => bot(n, 10 + i)) },
+  ] };"""
+          b = """  const myT = Settings.team | 0;
+  return { head: `<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`, cols: [
+    { cls: 'ally', head: esc(TEAM_NAMES[myT]), rows: [me, ...BOT_NAMES[myT].map(bot)] },
+    { cls: 'enemy', head: esc(TEAM_NAMES[1 - myT]), rows: BOT_NAMES[1 - myT].map((n, i) => bot(n, 10 + i)) },
+  ] };"""
+          print('st', a in t)
+          if a in t: t = t.replace(a, b, 1)
+          p.write_text(t, encoding='utf-8')
+          print('DONE')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "Danny78"
+          git config user.email "danielmendesdacosta78@gmail.com"
+          git add src/09ib-bombe.js src/01-core.js src/09-game.js src/09e-menus.js
+          if git diff --staged --quiet; then echo none; else git commit -m "V4: bomba auto + sons + escolha equipa solo" && git push origin HEAD:V4; fi
