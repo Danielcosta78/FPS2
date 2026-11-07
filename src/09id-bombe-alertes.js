@@ -1,38 +1,50 @@
 /* ==========================================================================
    MODE BOMBE : ALERTES, CHRONO, ICÔNE, SONS ET BOUTON TACTILE (09ib-bombe.js)
    Bombe plantée : une petite alerte rouge (le site et le chrono qui descend jusqu'à l'explosion, minutes et secondes, puis les dixièmes sous 10 s, qui
-   clignote) et deux bips, en haut de l'écran, juste sous le chrono du jeu (en retrait : elle ne gêne pas la vue), et une icône de bombe au-dessus d'elle
-   dans le décor, avec sa distance. Bombe désarmée : la même petite alerte, verte, et deux bips. Un tic à chaque demi-seconde de pose ou de
-   désamorçage, un bip de fin de manche (qui monte si l'équipe du joueur gagne). Tout part de l'état de la manche (BOMB.P, BOMB.phase, BOMB.why,
-   BOMB.winner) : les invités en ligne, qui reçoivent cet état de l'hôte (09ie-bombe-reseau.js), voient et entendent donc la même chose. Au tactile,
-   un bouton rond (tenu comme la touche E) apparaît quand le joueur peut poser ou désamorcer.
+   clignote) et deux bips, dans le coin haut gauche, à droite de la mini-carte (en retrait : elle ne gêne pas la vue), et une icône de bombe en haut de
+   l'image, dans la direction de la bombe, avec sa distance. Bombe désarmée : la même petite alerte, verte, et deux bips. Un tic à chaque demi-seconde de
+   pose ou de désamorçage, un bip de fin de manche (qui monte si l'équipe du joueur gagne). Tout part de l'état de la manche (BOMB.P, BOMB.phase,
+   BOMB.why, BOMB.winner) : les invités en ligne, qui reçoivent cet état de l'hôte (09ie-bombe-reseau.js), voient et entendent donc la même chose. Au
+   tactile, un bouton rond (tenu comme la touche E) apparaît quand le joueur peut poser ou désamorcer.
    Fichier à part, chargé après 09ib : il enveloppe bombUi, bombHud et bombClear.
    ========================================================================== */
-const BOMB_AL = { el: null, lbl: null, tm: null, mk: null, btn: null, seenP: null, overRound: -1, endRound: -1, until: 0, kind: '', tick: -1, placeAt: 0 };
+const BOMB_AL = { el: null, lbl: null, tm: null, mk: null, btn: null, seenP: null, overRound: -1, endRound: -1, until: 0, kind: '', tick: -1, placeAt: 0, mmL: 0, mmT: 0 };
 /* L'icône : une petite bombe (corps, mèche, étincelle) */
-const BOMB_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:-4px;margin-right:6px" aria-hidden="true"><circle cx="11" cy="14" r="7.5" fill="#1c1f1b" stroke="#e8e2d0" stroke-width="1.6"/>'
+const BOMB_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px;margin-right:0" aria-hidden="true"><circle cx="11" cy="14" r="7.5" fill="#1c1f1b" stroke="#e8e2d0" stroke-width="1.6"/>'
   + '<path d="M15.5 8.2 18.2 5.4" stroke="#e8e2d0" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="19.2" cy="4.4" r="1.8" fill="#ffb02e"/><circle cx="8.4" cy="11.6" r="1.8" fill="#ffffff" opacity="0.25"/></svg>';
-/* Une seule ligne compacte, en haut de l'écran : l'icône, le texte (le site, ou le mot désamorcée) et le chrono */
+/* Une petite carte : l'icône, et à côté deux lignes, le texte (bombe plantée, site A, ou bombe désamorcée) et le chrono */
 function bombAlertEl() {
   if (BOMB_AL.el && BOMB_AL.el.isConnected !== false) return BOMB_AL.el;
-  const el = document.createElement('div'), ic = document.createElement('span'), lbl = document.createElement('span'), tm = document.createElement('span');
+  const el = document.createElement('div'), ic = document.createElement('span'), col = document.createElement('div'), lbl = document.createElement('span'), tm = document.createElement('span');
   el.id = 'bombAl';
-  el.setAttribute('style', 'position:fixed;left:50%;top:64px;transform:translateX(-50%);display:none;align-items:center;gap:8px;padding:3px 12px 3px 9px;border-radius:4px;background:rgba(200,40,30,0.82);'
+  el.setAttribute('style', 'position:fixed;left:150px;top:12px;display:none;align-items:center;gap:6px;padding:3px 9px 3px 6px;border-radius:4px;background:rgba(200,40,30,0.82);'
     + 'pointer-events:none;color:#fff;text-shadow:0 1px 3px #000;font-family:"Barlow Condensed",sans-serif;white-space:nowrap;z-index:30');
   ic.innerHTML = BOMB_ICON;
-  lbl.setAttribute('style', 'font-size:16px;font-weight:700;letter-spacing:0.05em');
-  tm.setAttribute('style', 'font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;min-width:2.3em;text-align:right;color:#fff');
-  el.appendChild(ic); el.appendChild(lbl); el.appendChild(tm);
+  col.setAttribute('style', 'display:flex;flex-direction:column;line-height:1.05');
+  lbl.setAttribute('style', 'font-size:clamp(10px,1.2vw,12px);font-weight:700;letter-spacing:0.04em');
+  tm.setAttribute('style', 'font-size:clamp(15px,2vw,20px);font-weight:700;font-variant-numeric:tabular-nums;color:#fff');
+  col.appendChild(lbl); col.appendChild(tm); el.appendChild(ic); el.appendChild(col);
   document.body.appendChild(el);
   BOMB_AL.el = el; BOMB_AL.lbl = lbl; BOMB_AL.tm = tm;
   return el;
 }
-/* Sous le chrono du jeu (#timer), à sa verticale ; sans lui, en haut au milieu. Recalculé deux fois par seconde (la mise en page ne bouge presque pas). */
+/* La mini-carte : le plus grand canevas de taille moyenne dans le coin haut gauche (le canevas du rendu 3D, lui, couvre tout l'écran) */
+function bombMinimapRect() {
+  let best = null;
+  for (const c of document.querySelectorAll('canvas')) {
+    const r = c.getBoundingClientRect();
+    if (r.width < 60 || r.width > 480 || r.height < 60 || r.height > 480 || r.left > innerWidth * 0.3 || r.top > innerHeight * 0.3) continue;
+    if (!best || r.width * r.height > best.width * best.height) best = r;
+  }
+  return best;
+}
+/* À droite de la mini-carte, en haut au même niveau qu'elle (sans mini-carte, un peu en retrait du coin) ; recalculé deux fois par seconde */
 function bombAlertPlace(now) {
   if (now < BOMB_AL.placeAt) return;
   BOMB_AL.placeAt = now + 500;
-  const t = $('timer'), r = t && t.getBoundingClientRect ? t.getBoundingClientRect() : null;
-  if (r && r.width > 0) { hudStyle(BOMB_AL.el, 'top', Math.round(r.bottom + 6) + 'px'); hudStyle(BOMB_AL.el, 'left', Math.round(r.left + r.width / 2) + 'px'); }
+  const r = bombMinimapRect(), L = r ? Math.round(r.right + 8) : 150, T = r ? Math.round(r.top) : 12;
+  if (L !== BOMB_AL.mmL) { BOMB_AL.mmL = L; hudStyle(BOMB_AL.el, 'left', L + 'px'); }
+  if (T !== BOMB_AL.mmT) { BOMB_AL.mmT = T; hudStyle(BOMB_AL.el, 'top', T + 'px'); }
 }
 /* Deux bips : plantée, deux fois le même (grave et insistant) ; désarmée, un bip qui monte */
 function bombAlertSound(kind) {
@@ -60,7 +72,7 @@ function bombAlertTick() {
   } else BOMB_AL.tick = -1;
   const planted = BOMB.phase === 'planted' && P, defused = BOMB_AL.kind === 'defuse' && now < BOMB_AL.until;
   hudStyle(BOMB_AL.el, 'display', planted || defused ? 'flex' : 'none');
-  hudStyle(BOMB_AL.tm, 'display', planted ? 'inline' : 'none');
+  hudStyle(BOMB_AL.tm, 'display', planted ? 'block' : 'none');
   if (planted || defused) bombAlertPlace(now);
   if (planted) {
     hudText(BOMB_AL.lbl, _t('Bombe plantée, site {0}', BOMB.sites[P.site] ? BOMB.sites[P.site].name : '?'));
@@ -74,20 +86,17 @@ function bombAlertTick() {
   bombBtnTick();
 }
 
-/* ---------- L'icône de la bombe posée, à l'écran (comme les repères des sites, 09ib) ---------- */
+/* ---------- L'icône de la bombe posée, en haut de l'image (comme les repères des sites, 09ib : bombMarkAt) ---------- */
 function bombMarkTick() {
   const P = BOMB.P, show = BOMB.phase === 'planted' && P;
   if (!show) { if (BOMB_AL.mk) hudStyle(BOMB_AL.mk, 'opacity', '0'); return; }
   if (!BOMB_AL.mk) {
-    const el = document.createElement('div'); el.className = 'dpm hot'; el.innerHTML = '<b>' + BOMB_ICON.replace('margin-right:6px', 'margin-right:0') + '</b><i></i>';
+    const el = document.createElement('div'); el.className = 'dpm hot'; el.innerHTML = '<b>' + BOMB_ICON.replace('width="16" height="16"', 'width="24" height="24"') + '</b><i></i>';
     $('hud').insertBefore(el, $('scope')); BOMB_AL.mk = el;
   }
   const el = BOMB_AL.mk;
-  _dv.set(P.x, P.y + 1.2, P.z).project(camera);
-  const vis = _dv.z < 1 && Math.abs(_dv.x) < 1.1 && Math.abs(_dv.y) < 1.1;
-  hudStyle(el, 'opacity', vis ? '1' : '0');
-  if (!vis) return;
-  hudStyle(el, 'transform', `translate(${Math.round((_dv.x * 0.5 + 0.5) * VIEW.w)}px, ${Math.round((-_dv.y * 0.5 + 0.5) * VIEW.h)}px) translate(-50%, -50%)`);
+  if (!bombMarkAt(el, P.x, P.y, P.z, 20)) return;
+  bombMarkFix(el);
   hudText(el.lastChild, `${Math.round(hyp(P.x - camera.position.x, P.z - camera.position.z))} m`);
 }
 

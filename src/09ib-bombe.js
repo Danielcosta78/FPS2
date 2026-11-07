@@ -14,7 +14,7 @@
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
-  phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planner: null, planter: null, defuserBot: null, P: null, prog: 0, progMe: false, allow: false,
+  phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planter: null, defusers: [], P: null, prog: 0, progMe: false, allow: false,
   why: '', winner: -1, touchE: false, said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
 };
 if (!(Settings.limitBomb > 0)) Settings.limitBomb = 7; // manches à gagner (MODES.bomb.key)
@@ -75,7 +75,7 @@ function bombClear() {
   BOMB.sites = []; BOMB.mk = [];
   bombBombClear();
   if (BOMB.ui) BOMB.ui.remove();
-  BOMB.ui = null; BOMB.phase = 'off'; BOMB.carrier = null; BOMB.planter = null; BOMB.defuserBot = null; BOMB.prog = 0; BOMB.progMe = false;
+  BOMB.ui = null; BOMB.phase = 'off'; BOMB.carrier = null; BOMB.planter = null; BOMB.defusers = []; BOMB.prog = 0; BOMB.progMe = false;
 }
 
 /* ---------- Les manches ---------- */
@@ -84,7 +84,7 @@ function bombRoundSetup() {
   BOMB.round++;
   BOMB.swapAt = Math.floor((2 * (MATCH.limit > 0 ? MATCH.limit : Settings.limitBomb) - 1) / 2); // la moitié des manches possibles : après elles, les camps changent (MATCH.limit n'est posé qu'après modeStart)
   BOMB.att = BOMB.played < BOMB.swapAt ? 0 : 1; // l'équipe qui attaque
-  BOMB.phase = 'live'; BOMB.t = BOMB.roundLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.carrier = null; BOMB.planter = null; BOMB.defuserBot = null; BOMB.target = Math.random() < 0.5 ? 0 : 1; BOMB.sayT = 0;
+  BOMB.phase = 'live'; BOMB.t = BOMB.roundLen; BOMB.prog = 0; BOMB.progMe = false; BOMB.carrier = null; BOMB.planter = null; BOMB.defusers = []; BOMB.target = Math.random() < 0.5 ? 0 : 1; BOMB.sayT = 0;
   bombBombClear();
 }
 /* Le monde de la manche d'avant : grenades, couteaux, fumigènes, bruits */
@@ -118,6 +118,9 @@ function bombChannel(e) {
   if (e.isPlayer) return !!KEYS.KeyE || BOMB.touchE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
   return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
 }
+/* Un bot en mission : les attaquants avant la pose, les défenseurs après. Il oublie les adversaires perdus de vue (lastSeenT, 07b-tactics.js : sinon il les
+   poursuit des secondes durant et ne pense plus à la bombe) ; s'il en voit un, il se bat comme avant. */
+function bombFocus(e) { return BOMB.phase === 'live' ? e.team === BOMB.att : BOMB.phase === 'planted' && e.team !== BOMB.att; }
 /* Un bot au calme (aucun adversaire en vue) qui roule en liberté : on lui fait tenir la position (holdT), il s'arrête et peut poser ou désamorcer.
    Sans cela, il repartait vers un autre but dès qu'il arrivait près du site (le but d'un défenseur, la bombe, n'est pas un nœud du réseau). */
 function bombBotHold(e) { if (e.tactic !== 'roam' || e.visible) return false; e.holdT = Math.max(e.holdT, 0.4); return true; }
@@ -177,7 +180,7 @@ function bombFuseTick(dt) {
   let by = null;
   for (const e of entities) {
     if (!e.alive || e.off || e.isRemote || e.team === BOMB.att) continue;
-    if (hyp(e.pos.x - P.x, e.pos.z - P.z) < 2.6 && Math.abs(e.pos.y - P.y) < 1.6 && (e.isPlayer ? bombChannel(e) : bombBotHold(e))) { by = e; if (e.isPlayer) break; }
+    if (hyp(e.pos.x - P.x, e.pos.z - P.z) < 2.6 && Math.abs(e.pos.y - P.y) < 1.6 && (e.isPlayer ? bombChannel(e) : bombBotHold(e) || P.t < 10)) { by = e; if (e.isPlayer) break; } // (sous 10 s, un bot près de la bombe désamorce même sous le feu)
   }
   if (by) { BOMB.prog += dt; BOMB.progMe = !!by.isPlayer; if (BOMB.prog >= BOMB.defuseT) { bombEnd(1 - BOMB.att, 'defused'); return; } }
   else { BOMB.prog = 0; BOMB.progMe = false; }
@@ -228,10 +231,16 @@ function bombUpdate(dt) {
     return;
   }
   if (BOMB.said !== BOMB.round) { bombSayRound(); bombReplan(); } // première image de la manche (le décompte est fini)
-  for (const e of entities) if (e.bombHold && e.goal && e.goal.hold) { e.goal.holdFor = e.bombHold.f; e.goal.look = e.bombHold.l; } // (setPath copie hold et dom seulement : la durée et le regard de la tenue)
+  for (const e of entities) {
+    if (e.bombHold && e.goal && e.goal.hold) { e.goal.holdFor = e.bombHold.f; e.goal.look = e.bombHold.l; } // (setPath copie hold et dom seulement : la durée et le regard de la tenue)
+    if (!e.isPlayer && !e.isRemote && e.alive && !e.visible && bombFocus(e)) e.lastSeenT = -1e9;
+  }
   bombCarrierTick();
   if (BOMB.phase === 'live') bombPlanterTick();
-  else if (BOMB.P) { const d = bombDefuser(); if (d !== BOMB.defuserBot) { BOMB.defuserBot = d; if (d && d.tactic === 'roam') { d.goal = null; d.path = null; d.holdT = 0; } } } // le défenseur le plus proche change : il refait son but
+  else if (BOMB.P) { // les désamorceurs changent (l'un est tombé, ou un autre est plus proche) : les nouveaux refont leur but
+    const d = bombDefusers();
+    if (d.length !== BOMB.defusers.length || d.some((e, i) => e !== BOMB.defusers[i])) { for (const e of d) if (!BOMB.defusers.includes(e) && e.tactic === 'roam') { e.goal = null; e.path = null; e.holdT = 0; } BOMB.defusers = d; }
+  }
   const da = bombAlive(1 - BOMB.att), aa = bombAlive(BOMB.att);
   if (BOMB.phase === 'live') {
     BOMB.t -= dt; bombPlantTick(dt);
@@ -277,17 +286,15 @@ function bombSpot(p, r0, r1) {
   }
   return new V3(p.x, p.y, p.z);
 }
-/* Le bot défenseur vivant le plus proche de la bombe : c'est lui qui va la désamorcer */
-function bombDefuser() {
-  const P = BOMB.P; let best = null, bd = 1e9;
-  for (const e of entities) {
-    if (!e.alive || e.off || e.isPlayer || e.isRemote || e.team === BOMB.att) continue;
-    const d = hyp(e.pos.x - P.x, e.pos.z - P.z); if (d < bd) { bd = d; best = e; }
-  }
-  return best;
+/* Les deux bots défenseurs vivants les plus proches de la bombe : ce sont eux qui vont la désamorcer (si l'un tombe, l'autre continue) */
+function bombDefusers() {
+  const P = BOMB.P, L = entities.filter((e) => e.alive && !e.off && !e.isPlayer && !e.isRemote && e.team !== BOMB.att);
+  L.sort((a, b) => hyp(a.pos.x - P.x, a.pos.z - P.z) - hyp(b.pos.x - P.x, b.pos.z - P.z));
+  return L.slice(0, 2);
 }
-/* Où aller (pickGoal) : le bot poseur au site visé, qu'il tient le temps de poser ; les autres attaquants couvrent ce site ; les défenseurs
-   tiennent chacun un site, face à l'arrivée adverse ; la bombe posée, les attaquants la gardent et un défenseur va la désamorcer.
+/* Où aller (pickGoal) : le bot poseur au site visé, qu'il tient le temps de poser ; les autres attaquants le rejoignent et y restent ; les défenseurs
+   tiennent chacun un site, face à l'arrivée adverse ; la bombe posée, les attaquants la gardent, deux défenseurs vont la désamorcer et les autres se
+   rassemblent autour d'elle.
    setPath (07-bots.js) ne recopie du but que hold et dom : la durée (holdFor) et le regard (look) de la tenue sont gardés dans b.bombHold,
    puis remis sur le but du bot par bombUpdate. */
 function bombGoal(b, now) {
@@ -302,13 +309,13 @@ function bombGoalPick(b) {
   if (P) {
     const s = S[P.site];
     if (att) { g = bombSpot(s, 3, BOMB.rad + 3); g.hold = true; g.holdFor = rand(5, 9); g.look = { x: s.x + rand(-10, 10), z: s.z + rand(-10, 10) }; }
-    else if (bombDefuser() === b) { const id = navNode(P.x, P.y, P.z); g = id >= 0 ? new V3(NAV.nx[id], NAV.ny[id], NAV.nz[id]) : new V3(P.x, P.y, P.z); g.hold = true; g.holdFor = BOMB.defuseT + 2; } // (un nœud du réseau : la bombe n'en est pas un, et le bot ne s'arrêterait jamais à moins de 2 m)
-    else { g = bombSpot(s, 5, BOMB.rad + 6); g.hold = true; g.holdFor = rand(3, 6); }
+    else if (bombDefusers().includes(b)) { const id = navNode(P.x, P.y, P.z); g = id >= 0 ? new V3(NAV.nx[id], NAV.ny[id], NAV.nz[id]) : new V3(P.x, P.y, P.z); g.hold = true; g.holdFor = BOMB.defuseT + 2; } // (un nœud du réseau : la bombe n'en est pas un, et le bot ne s'arrêterait jamais à moins de 2 m)
+    else { g = bombSpot(s, 2.5, 4.5); g.hold = true; g.holdFor = rand(4, 8); } // les autres défenseurs se rassemblent autour de la bombe (à moins de 2,6 m ils désamorcent aussi)
     return g;
   }
   if (att) {
-    const c = BOMB.planter === b, s = c ? S[BOMB.target] : S[Math.random() < 0.7 ? BOMB.target : 1 - BOMB.target];
-    g = bombSpot(s, 0.5, c ? 2.5 : BOMB.rad - 1.5); g.hold = true; g.holdFor = c ? BOMB.plantT + 1.5 : rand(3, 6);
+    const c = BOMB.planter === b, s = c ? S[BOMB.target] : S[Math.random() < 0.9 ? BOMB.target : 1 - BOMB.target];
+    g = bombSpot(s, 0.5, c ? 2.5 : BOMB.rad - 1.5); g.hold = true; g.holdFor = c ? BOMB.plantT + 2.5 : rand(7, 12); // (ils restent au site : tout attaquant au calme dans la zone pose)
     return g;
   }
   const s = S[b.id % S.length], side = Math.sign(s.z) || 1;
@@ -338,15 +345,31 @@ try { const f = cdShow; cdShow = function (n, first) { f(n, first); if (MATCH.mo
 try { const f = botChasing; botChasing = function (b, now, D) { return MATCH.mode === 'bomb' ? false : f(b, now, D); }; } catch (e) { console.warn('bombe : botChasing', e); }
 try { const f = pickGoal; pickGoal = function (b, now) { if (MATCH.mode === 'bomb') { const g = bombGoal(b, now); if (g) return g; } return f(b, now); }; } catch (e) { console.warn('bombe : pickGoal', e); }
 
+/* Un repère à l'écran au-dessus d'un point du monde, relevé de h mètres et borné entre 14 et 19 % de la hauteur de l'écran : en haut de l'image, il ne masque pas
+   la vue (la position à l'écran ne donne que la direction). Faux (et caché) si le point est derrière ou hors de l'écran sur les côtés. */
+function bombMarkAt(el, x, y, z, h) {
+  _dv.set(x, y + h, z).project(camera);
+  const show = _dv.z < 1 && Math.abs(_dv.x) < 1.1;
+  hudStyle(el, 'opacity', show ? '1' : '0');
+  if (!show) return false;
+  hudStyle(el, 'transform', `translate(${Math.round((_dv.x * 0.5 + 0.5) * VIEW.w)}px, ${Math.round(clamp(-_dv.y * 0.5 + 0.5, 0.14, 0.19) * VIEW.h)}px) translate(-50%, -50%)`);
+  return true;
+}
+/* Les mètres dans la bulle : la bulle (la feuille de style de la domination, shell.html) laissait le texte décalé ; on la remet à la taille de la bulle de la
+   lettre et on centre le texte (une fois, dès que le repère est mis en page) */
+function bombMarkFix(el) {
+  if (el.bFix) return;
+  const b = el.firstChild, i = el.lastChild, r = b && b.getBoundingClientRect ? b.getBoundingClientRect() : null;
+  if (!r || r.width < 8) return;
+  i.style.cssText += `;display:flex;align-items:center;justify-content:center;text-align:center;padding:0;box-sizing:border-box;line-height:1;width:${r.width}px;height:${r.height}px`;
+  el.bFix = true;
+}
 /* Image par image : le repère de chaque site à l'écran (lettre et distance) */
 function bombHud() {
   for (const p of BOMB.sites) {
-    _dv.set(p.x, p.y + 3.4, p.z).project(camera);
-    const el = p.el, show = _dv.z < 1 && Math.abs(_dv.x) < 1.1 && Math.abs(_dv.y) < 1.1;
-    hudStyle(el, 'opacity', show ? '1' : '0');
-    if (!show) continue;
-    hudStyle(el, 'transform', `translate(${Math.round((_dv.x * 0.5 + 0.5) * VIEW.w)}px, ${Math.round((-_dv.y * 0.5 + 0.5) * VIEW.h)}px) translate(-50%, -50%)`);
-    hudText(el.lastChild, `${Math.round(hyp(p.x - camera.position.x, p.z - camera.position.z))} m`);
+    if (!bombMarkAt(p.el, p.x, p.y, p.z, 20)) continue;
+    bombMarkFix(p.el);
+    hudText(p.el.lastChild, `${Math.round(hyp(p.x - camera.position.x, p.z - camera.position.z))} m`);
   }
 }
 /* Mini-carte : zone et lettre de chaque site (la lettre dans une petite toile faite une fois, comme domLetter : la dessiner à chaque image coûte cher) ; la bombe posée clignote */
