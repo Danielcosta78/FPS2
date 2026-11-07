@@ -1,36 +1,27 @@
 /* ==========================================================================
-   MODE BOMBE (en construction, phase 2)
+   MODE BOMBE
    Alpha attaque d'abord et pose la bombe sur l'un des deux sites (A ou B), Bravo les défend. Une seule vie par manche, le premier camp à la
    limite de manches l'emporte ; les camps changent à la moitié. Ce fichier suit le modèle de la domination (09i-modes.js) : il s'y accroche
    sans réécrire les gros fichiers (modeStart, modeEnd, modeUpdate, domHud, domMinimap, spawnBase, respawnPlayer, killLimitReached, finKicker,
    cdShow, botChasing et pickGoal sont enveloppées plus bas, chacune dans un try : un nom qui changerait ailleurs ne casse pas le chargement du jeu).
-   Le mode n'est enregistré qu'avec ?bomba=1 dans l'adresse (gardé ensuite, voir bombFlag), tant qu'il n'est pas terminé.
    Sites : MAP_DEFS.<id>.bomb [[x, z], [x, z]], sinon bombDefaults ; ils se placent avec l'outil des zones (?outil=zones, 09zn-outil-zones.js).
    Une manche (BOMB.phase) : 'live' (la bombe est au porteur, chrono de manche), 'planted' (la bombe tourne, chrono de mise à feu), 'over'
    (annonce, BOMB.endLen secondes, puis bombNewRound : tout le monde réapparaît et le décompte du départ (09y-decompte.js) rejoue).
-   Pose et désamorçage : tenir E dans la zone (au tactile et à la manette : rester immobile). Un bot au calme (sans adversaire en vue) qui arrive
-   dans la zone s'arrête (bombBotHold) et pose ou désamorce ; ses buts viennent de bombGoal (pickGoal).
-   Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes et chrono de la bombe), 09ie (le jeu en ligne).
+   Pose et désamorçage : tenir E dans la zone, ou le bouton tactile (au tactile et à la manette : rester immobile marche aussi). Un bot au calme (sans
+   adversaire en vue) qui arrive dans la zone s'arrête (bombBotHold) et pose ou désamorce ; ses buts viennent de bombGoal (pickGoal).
+   Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône, sons et bouton tactile), 09ie (le jeu en ligne).
    ========================================================================== */
-/* Le drapeau du mode : ?bomba=1 l'allume et le garde (localStorage : le lien d'invitation d'un salon n'a pas le paramètre), ?bomba=0 l'éteint */
-function bombFlag() {
-  const q = new URLSearchParams(location.search).get('bomba');
-  try { if (q === '1') localStorage.setItem('dc_bomba', '1'); else if (q === '0') localStorage.removeItem('dc_bomba'); return q === '1' || (q !== '0' && localStorage.getItem('dc_bomba') === '1'); } catch (e) { return q === '1'; }
-}
-const BOMB_DEV = bombFlag();
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
-  phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planter: null, defuserBot: null, P: null, prog: 0, progMe: false, allow: false,
-  why: '', winner: -1, said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
+  phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planner: null, planter: null, defuserBot: null, P: null, prog: 0, progMe: false, allow: false,
+  why: '', winner: -1, touchE: false, said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
 };
 if (!(Settings.limitBomb > 0)) Settings.limitBomb = 7; // manches à gagner (MODES.bomb.key)
-if (BOMB_DEV) {
-  MODES.bomb = { name: _t('Pose de bombe'), btn: _t('Pose de bombe'), sub: _t('Pose de bombe, deux sites à attaquer ou à défendre'), teams: _t('6 contre 6, une seule vie par manche'),
-    lim: _t('Manches à gagner'), unit: _t('manches gagnées'), limits: [4, 7, 10, 13], key: 'limitBomb', respawn: 9999, botRespawn: 9999, prot: 2, // (pas de réapparition : tout le monde revient à la manche suivante)
-    hint: _t('Alpha attaque et pose la bombe sur un site, Bravo la défend. Une seule vie par manche. Le premier camp à la limite de manches l\u0027emporte.') };
-  MODE_IDS.push('bomb');
-}
+MODES.bomb = { name: _t('Pose de bombe'), btn: _t('Pose de bombe'), sub: _t('Pose de bombe, deux sites à attaquer ou à défendre'), teams: _t('6 contre 6, une seule vie par manche'),
+  lim: _t('Manches à gagner'), unit: _t('manches gagnées'), limits: [4, 7, 10, 13], key: 'limitBomb', respawn: 9999, botRespawn: 9999, prot: 2, // (pas de réapparition : tout le monde revient à la manche suivante)
+  hint: _t('Alpha attaque et pose la bombe sur un site, Bravo la défend. Une seule vie par manche. Le premier camp à la limite de manches l\u0027emporte.') };
+MODE_IDS.push('bomb');
 
 /* ---------- Les sites ---------- */
 /* Sites par défaut d'une carte qui n'a pas de MAP_DEFS.<id>.bomb : dans la moitié de carte de Bravo, un à gauche et un à droite, à mi-chemin
@@ -121,10 +112,10 @@ function bombNewRound() {
 }
 function bombAlive(t) { let n = 0; for (const e of entities) if (e.alive && !e.off && e.team === t) n++; return n; }
 function bombSiteAt(e) { for (const s of BOMB.sites) if (hyp(e.pos.x - s.x, e.pos.z - s.z) < BOMB.rad - 0.4 && Math.abs(e.pos.y - s.y) < DOM.dy + 1) return s; return null; }
-/* Le soldat tient-il l'action ? Le joueur : la touche E (au tactile et à la manette, rester immobile) ; un bot : en place et sans adversaire en vue */
+/* Le soldat tient-il l'action ? Le joueur : la touche E ou le bouton tactile (au tactile et à la manette, rester immobile aussi) ; un bot : en place et sans adversaire en vue */
 function bombChannel(e) {
   if (!e.alive) return false;
-  if (e.isPlayer) return !!KEYS.KeyE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
+  if (e.isPlayer) return !!KEYS.KeyE || BOMB.touchE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
   return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
 }
 /* Un bot au calme (aucun adversaire en vue) qui roule en liberté : on lui fait tenir la position (holdT), il s'arrête et peut poser ou désamorcer.
