@@ -2,6 +2,7 @@
 /* ==========================================================================
    RIPOSTE: FRONTLINE - noyau : utilitaires, textures procédurales, rendu
    ========================================================================== */
+
 THREE.ColorManagement.legacyMode = false;
 
 const TAU = Math.PI * 2;
