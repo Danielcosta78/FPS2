@@ -12,6 +12,7 @@
    Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône et sons), 09ie (le jeu en ligne). Le choix de
    l'équipe en solo est dans 09ig.
    ========================================================================== */
+
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
@@ -62,7 +63,6 @@ function bombInit() {
     + '<div style="display:none;width:230px;height:9px;margin:8px auto 0;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.35)"><i style="display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);background:rgb(229,96,60)"></i></div>';
   hud.insertBefore(ui, at);
   BOMB.ui = ui; BOMB.uiT = ui.children[0]; BOMB.uiS = ui.children[1]; BOMB.uiB = ui.children[2]; BOMB.uiF = ui.children[2].firstChild;
-  BOMB.uiS.style.cssText = 'position:absolute;left:78%;top:3.5%;transform:translateX(-50%);text-align:center;white-space:nowrap;';
   // les manches
   BOMB.round = 0; BOMB.played = 0; BOMB.said = 0; BOMB.swapped = false;
   bombRoundSetup();
@@ -267,7 +267,7 @@ function bombStatus() {
     return hyp(me.pos.x - BOMB.P.x, me.pos.z - BOMB.P.z) < 2.6 ? _t('Restez immobile pour désamorcer') : _t('Désamorcez la bombe avant qu\u0027elle explose');
   }
   if (BOMB.phase !== 'live') return '';
-  if (att) return bombSiteAt(me) ? _t('Restez immobile pour poser la bombe') : BOMB.carrier === me ? _t('Vous portez la bombe') : _t('Attaquez et posez la bombe');
+  if (att) return bombSiteAt(me) ? _t('Restez immobile pour poser la bombe') : _t('Attaquez et posez la bombe');
   return _t('Défendez les sites A et B');
 }
 function bombUi() {
