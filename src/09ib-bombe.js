@@ -12,6 +12,7 @@
    Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône et sons), 09ie (le jeu en ligne). Le choix de
    l'équipe en solo est dans 09ig.
    ========================================================================== */
+
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
@@ -266,7 +267,7 @@ function bombStatus() {
     return hyp(me.pos.x - BOMB.P.x, me.pos.z - BOMB.P.z) < 2.6 ? _t('Restez immobile pour désamorcer') : _t('Désamorcez la bombe avant qu\u0027elle explose');
   }
   if (BOMB.phase !== 'live') return '';
-  if (att) return bombSiteAt(me) ? _t('Restez immobile pour poser la bombe') : _t('Attaquez et posez la bombe');
+  if (att) return bombSiteAt(me) ? _t('Restez immobile pour poser la bombe') : BOMB.carrier === me ? _t('Vous portez la bombe') : _t('Attaquez et posez la bombe');
   return _t('Défendez les sites A et B');
 }
 function bombUi() {
