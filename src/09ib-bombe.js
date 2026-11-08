@@ -12,7 +12,6 @@
    Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône et sons), 09ie (le jeu en ligne). Le choix de
    l'équipe en solo est dans 09ig.
    ========================================================================== */
-
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
