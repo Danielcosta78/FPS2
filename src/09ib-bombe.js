@@ -12,6 +12,7 @@
    Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône et sons), 09ie (le jeu en ligne). Le choix de
    l'équipe en solo est dans 09ig.
    ========================================================================== */
+
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
@@ -64,7 +65,7 @@ function bombInit() {
   BOMB.ui = ui; BOMB.uiT = ui.children[0]; BOMB.uiS = ui.children[1]; BOMB.uiB = ui.children[2]; BOMB.uiF = ui.children[2].firstChild;
   /* uiS séparé du titre de manche : à droite, sous le score — pas empilé au centre avec la ronde / let's go */
   hud.appendChild(BOMB.uiS);
-  BOMB.uiS.style.cssText = 'position:fixed;left:auto;right:3%;top:11%;transform:none;text-align:right;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font:18px/1.2 "Barlow Condensed",sans-serif;white-space:nowrap;z-index:30;opacity:0.95;max-width:42vw';
+  BOMB.uiS.style.cssText = 'position:fixed;left:auto;right:18%;top:5%;transform:none;text-align:right;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font:18px/1.2 "Barlow Condensed",sans-serif;white-space:nowrap;z-index:30;opacity:0.95;max-width:42vw';
   // les manches
   BOMB.round = 0; BOMB.played = 0; BOMB.said = 0; BOMB.swapped = false;
   bombRoundSetup();
