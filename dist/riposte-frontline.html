@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-c0kaL7QbsKwq3WnkP/5COLtD7f4/4Ei+dl7C1gYDc/E=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' https://cdn.jsdelivr.net/npm/peerjs@1.5.5/; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-PDTsI6LRxB/0ftxCpebrNBJJIQDUnCGnro/BBIRJqdw=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' https://cdn.jsdelivr.net/npm/peerjs@1.5.5/; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.peerjs.com wss://*.peerjs.com wss://itty.ws stun: turn:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Riposte">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="cod-relay" content="">
-<meta name="cod-build" content="1e84b37ba83d">
+<meta name="cod-build" content="127e726df99b">
 <meta name="menu-music" content="menu-theme.mp3?v=1b342264">
 <title>Riposte: Frontline, FPS gratuit dans le navigateur</title>
 <!-- Aperçu d'un lien partagé (Discord, WhatsApp, réseaux) et adresse de référence : adresse et image posées par build.py (SITE, assets/apercu.jpg).
@@ -8034,7 +8034,7 @@ bombCarrierTick();if(BOMB.phase==='live')bombPlanterTick();else if(BOMB.P){const
 const da=bombAlive(1-BOMB.att),aa=bombAlive(BOMB.att);if(BOMB.phase==='live'){BOMB.t-=dt;bombPlantTick(dt);if(BOMB.phase==='live'){if(da===0&&aa>0)bombEnd(BOMB.att,'elim_def');else if(aa===0)bombEnd(1-BOMB.att,'elim_att');else if(BOMB.t<=0)bombEnd(1-BOMB.att,'time');}}else if(da===0)bombEnd(BOMB.att,'elim_def');else bombFuseTick(dt);MATCH.timeLeft=Math.max(1,BOMB.phase==='planted'&&BOMB.P?BOMB.P.t:BOMB.t);bombUi();}
 function bombSay(title,sub,col,secs){BOMB.sayTitle=title;BOMB.sayS=sub;BOMB.sayC=col;BOMB.sayT=secs;}
 function bombStatus(){const me=PL.ent,att=me.team===BOMB.att;if(!me.alive)return _t('Éliminé, prochaine manche bientôt');if(BOMB.phase==='planted'&&BOMB.P){if(att)return _t('Protégez la bombe');return hyp(me.pos.x-BOMB.P.x,me.pos.z-BOMB.P.z)<2.6?_t('Restez immobile pour désamorcer'):_t('Désamorcez la bombe avant qu\u0027elle explose');}
-if(BOMB.phase!=='live')return'';if(att)return bombSiteAt(me)?_t('Restez immobile pour poser la bombe'):_t('Attaquez et posez la bombe');return _t('Défendez les sites A et B');}
+if(BOMB.phase!=='live')return'';if(att)return bombSiteAt(me)?_t('Restez immobile pour poser la bombe'):BOMB.carrier===me?_t('Vous portez la bombe'):_t('Attaquez et posez la bombe');return _t('Défendez les sites A et B');}
 function bombUi(){if(!BOMB.ui)return;const say=BOMB.sayT>0,bar=BOMB.progMe&&BOMB.prog>0;hudText(BOMB.uiT,say?BOMB.sayTitle:'');hudStyle(BOMB.uiT,'color',BOMB.sayC);hudText(BOMB.uiS,bar?(BOMB.phase==='planted'?_t('Désamorçage'):_t('Pose de la bombe')):say?BOMB.sayS:bombStatus());hudStyle(BOMB.uiB,'display',bar?'block':'none');if(bar)hudStyle(BOMB.uiF,'transform',`scaleX(${clamp(BOMB.prog/(BOMB.phase==='planted'?BOMB.defuseT:BOMB.plantT),0,1).toFixed(3)})`);}
 function bombSpot(p,r0,r1){for(let k=0;k<8;k++){const a=rand(0,TAU),r=rand(r0,r1),x=p.x+Math.cos(a)*r,z=p.z+Math.sin(a)*r,id=navNode(x,p.y,z);if(id>=0&&NAV.comp[id]===NAV.mainComp&&hyp(NAV.nx[id]-x,NAV.nz[id]-z)<2&&Math.abs(NAV.ny[id]-p.y)<1.5)return new V3(NAV.nx[id],NAV.ny[id],NAV.nz[id]);}
 return new V3(p.x,p.y,p.z);}
