@@ -58,11 +58,12 @@ function bombInit() {
   }
   // l'interface des manches : un titre, une ligne d'état et la barre de pose ou de désamorçage
   const ui = document.createElement('div'); ui.id = 'bombUi';
-  ui.setAttribute('style', 'position:absolute;left:78%;top:3.5%;transform:translateX(-50%);text-align:center;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font-family:"Barlow Condensed",sans-serif;min-width:260px');
+  ui.setAttribute('style', 'position:absolute;left:50%;top:13%;transform:translateX(-50%);text-align:center;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font-family:"Barlow Condensed",sans-serif;min-width:260px');
   ui.innerHTML = '<div style="font-size:32px;font-weight:700;letter-spacing:0.05em;min-height:1em"></div><div style="font-size:19px;opacity:0.95;min-height:1em"></div>'
     + '<div style="display:none;width:230px;height:9px;margin:8px auto 0;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.35)"><i style="display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);background:rgb(229,96,60)"></i></div>';
   hud.insertBefore(ui, at);
   BOMB.ui = ui; BOMB.uiT = ui.children[0]; BOMB.uiS = ui.children[1]; BOMB.uiB = ui.children[2]; BOMB.uiF = ui.children[2].firstChild;
+  BOMB.uiS.style.cssText = 'position:absolute;left:78%;top:3.5%;transform:translateX(-50%);text-align:center;white-space:nowrap;';
   // les manches
   BOMB.round = 0; BOMB.played = 0; BOMB.said = 0; BOMB.swapped = false;
   bombRoundSetup();
