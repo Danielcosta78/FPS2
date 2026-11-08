@@ -64,7 +64,7 @@ function bombInit() {
   BOMB.ui = ui; BOMB.uiT = ui.children[0]; BOMB.uiS = ui.children[1]; BOMB.uiB = ui.children[2]; BOMB.uiF = ui.children[2].firstChild;
   /* uiS séparé du titre de manche : à droite, sous le score — pas empilé au centre avec la ronde / let's go */
   hud.appendChild(BOMB.uiS);
-  BOMB.uiS.style.cssText = 'position:fixed;left:auto;left:50%;bottom:2%;transform:none;text-align:right;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font:18px/1.2 "Barlow Condensed",sans-serif;white-space:nowrap;z-index:30;opacity:0.95;max-width:42vw';
+  BOMB.uiS.style.cssText = 'position:fixed;transform:translateX(-50%);left:50%;bottom:2%;transform:none;text-align:right;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000;font:18px/1.2 "Barlow Condensed",sans-serif;white-space:nowrap;z-index:30;opacity:0.95;max-width:42vw';
   // les manches
   BOMB.round = 0; BOMB.played = 0; BOMB.said = 0; BOMB.swapped = false;
   bombRoundSetup();
