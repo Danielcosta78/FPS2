@@ -312,7 +312,7 @@ const GPU = (() => {
   const gl = renderer.getContext(); let name = '';
   try { const ext = gl.getExtension('WEBGL_debug_renderer_info'); name = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch (e) { /* inconnu */ }
   const discrete = /NVIDIA|GeForce|Quadro|RTX|GTX|Radeon RX|Radeon Pro|Radeon\(TM\) RX|FirePro|Arc\(TM\) A\d|Arc A\d/i.test(name);
-  return { name, tier: ULTRA ? 'ultra' : COARSE ? 'medium' : discrete ? 'high' : 'medium' }; // téléphone : Moyenne
+  return { name, tier: ULTRA ? 'ultra' : COARSE ? 'low' : discrete ? 'high' : 'medium' }; // téléphone : Moyenne
 })();
 /* État courant : profil retenu, facteur de résolution dynamique. En mode automatique : échelon de AUTO_LADDER (rung)
    et échelon de départ (rungMin), où la résolution va de la plage du profil jusqu'à la densité de l'écran (voir stepQuality). */
