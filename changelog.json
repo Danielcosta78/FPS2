@@ -1,4 +1,5 @@
-[  
+[
+  
   {
     "version": "4.8.0",
     "date": "2026-11-07",
@@ -10,13 +11,18 @@
       },
       {
         "t": "new",
-        "x": "Pose de la bombe en tenant la touche E dans un site, et désamorçage près d'elle, avec un bouton tactile sur téléphone et tablette.",
-        "x_en": "Plant the bomb by holding E inside a site and defuse it next to it, with a touch button on phone and tablet."
+        "x": "Pose de la bombe et désamorçage automatiques, en restant immobile dans un site ou près de la bombe, avec une barre de progression.",
+        "x_en": "Automatic bomb planting and defusing by standing still inside a site or next to the bomb, with a progress bar."
       },
       {
         "t": "new",
-        "x": "Alerte de bombe plantée ou désamorcée, avec un chrono jusqu'à l'explosion dans le coin haut gauche à côté de la mini-carte, une icône de bombe et des sons.",
-        "x_en": "Bomb planted and defused alerts, with a countdown to the explosion in the top left corner next to the minimap, a bomb icon and sounds."
+        "x": "Alerte de bombe plantée ou désamorcée, avec un chrono jusqu'à l'explosion dans le coin haut gauche à côté de la mini-carte, une icône de bombe et des effets sonores.",
+        "x_en": "Bomb planted and defused alerts, with a countdown to the explosion in the top left corner next to the minimap, a bomb icon and sound effects."
+      },
+      {
+        "t": "new",
+        "x": "Choix de l'équipe à jouer en solo contre les bots, Alpha ou Bravo.",
+        "x_en": "Choice of the team to play in solo against bots, Alpha or Bravo."
       },
       {
         "t": "new",

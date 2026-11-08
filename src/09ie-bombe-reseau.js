@@ -3,7 +3,7 @@
    L'hôte décide tout : les manches, la pose, le désamorçage, l'explosion, le score, le changement de camps. Il joint l'état de la manche (bombNetState)
    à chacun de ses envois "ps" ; les invités l'appliquent avant le reste du message (bombNetApply), ce qui rejoue chez eux la nouvelle manche (le
    joueur réapparaît, le décompte repart, cdNetIn suit dans le même message), la bombe posée (avec son chrono), la fin de manche et l'explosion.
-   Un invité qui pose ou désamorce (touche E, comme en solo) le demande à l'hôte par un événement ('bpl' ou 'bdf', par netEvent) ; l'hôte vérifie la
+   Un invité qui pose ou désamorce (en restant immobile, comme en solo) le demande à l'hôte par un événement ('bpl' ou 'bdf', par netEvent) ; l'hôte vérifie la
    position et l'état de la manche, puis décide. Les dégâts de l'explosion : chacun blesse ce qu'il possède (bombBlowHurt). Le score des manches
    remplace le score de la partie : netUpdate (qui compte les éliminations) est tenue à l'écart.
    Le même fichier, enveloppant des fonctions de 09c-net.js, de 09i-modes.js et de 09ib : chacune dans un try.
@@ -97,7 +97,7 @@ function bombClientTick(dt) {
   }
   if (!busy) { BOMB.prog = 0; BOMB.progMe = false; }
 }
-/* La demande, au plus une fois toutes les 1,5 s (si l'hôte la refuse, le joueur la refait en tenant toujours la touche) */
+/* La demande, au plus une fois toutes les 1,5 s (si l'hôte la refuse, le joueur la refait en restant dans la zone) */
 function bombNetAsk(k, extra) {
   if (MATCH.time - BOMB.askT < 1.5) return;
   BOMB.askT = MATCH.time;

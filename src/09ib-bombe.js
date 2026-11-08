@@ -7,15 +7,16 @@
    Sites : MAP_DEFS.<id>.bomb [[x, z], [x, z]], sinon bombDefaults ; ils se placent avec l'outil des zones (?outil=zones, 09zn-outil-zones.js).
    Une manche (BOMB.phase) : 'live' (la bombe est au porteur, chrono de manche), 'planted' (la bombe tourne, chrono de mise à feu), 'over'
    (annonce, BOMB.endLen secondes, puis bombNewRound : tout le monde réapparaît et le décompte du départ (09y-decompte.js) rejoue).
-   Pose et désamorçage : tenir E dans la zone, ou le bouton tactile (au tactile et à la manette : rester immobile marche aussi). Un bot au calme (sans
-   adversaire en vue) qui arrive dans la zone s'arrête (bombBotHold) et pose ou désamorce ; ses buts viennent de bombGoal (pickGoal).
-   Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône, sons et bouton tactile), 09ie (le jeu en ligne).
+   Pose et désamorçage automatiques : il suffit de rester immobile dans la zone (une barre se remplit). Un bot au calme (sans adversaire en vue) qui
+   arrive dans la zone s'arrête (bombBotHold) et pose ou désamorce ; ses buts viennent de bombGoal (pickGoal).
+   Les autres fichiers du mode : 09ic (vue des équipiers après la mort), 09id (alertes, chrono, icône et sons), 09ie (le jeu en ligne). Le choix de
+   l'équipe en solo est dans 09ig.
    ========================================================================== */
 const BOMB = {
   rad: DOM.rad, names: ['A', 'B'], sites: [], mk: [], col: [0.9, 0.38, 0.24],
   roundLen: 105, plantT: 4, defuseT: 5, fuse: 40, endLen: 4.5, blast: 24, // secondes, sauf blast (mètres)
   phase: 'off', round: 0, played: 0, att: 0, swapAt: 6, swapped: false, t: 0, endT: 0, target: 0, carrier: null, planter: null, defusers: [], P: null, prog: 0, progMe: false, allow: false,
-  why: '', winner: -1, touchE: false, said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
+  why: '', winner: -1, said: 0, sayT: 0, sayTitle: '', sayS: '', sayC: '#fff', ui: null,
 };
 if (!(Settings.limitBomb > 0)) Settings.limitBomb = 7; // manches à gagner (MODES.bomb.key)
 MODES.bomb = { name: _t('Pose de bombe'), btn: _t('Pose de bombe'), sub: _t('Pose de bombe, deux sites à attaquer ou à défendre'), teams: _t('6 contre 6, une seule vie par manche'),
@@ -112,10 +113,10 @@ function bombNewRound() {
 }
 function bombAlive(t) { let n = 0; for (const e of entities) if (e.alive && !e.off && e.team === t) n++; return n; }
 function bombSiteAt(e) { for (const s of BOMB.sites) if (hyp(e.pos.x - s.x, e.pos.z - s.z) < BOMB.rad - 0.4 && Math.abs(e.pos.y - s.y) < DOM.dy + 1) return s; return null; }
-/* Le soldat tient-il l'action ? Le joueur : la touche E ou le bouton tactile (au tactile et à la manette, rester immobile aussi) ; un bot : en place et sans adversaire en vue */
+/* Le soldat tient-il l'action ? La pose et le désamorçage sont automatiques : le joueur n'a qu'à rester immobile dans la zone (une barre se remplit) ; un bot : en place et sans adversaire en vue */
 function bombChannel(e) {
   if (!e.alive) return false;
-  if (e.isPlayer) return !!KEYS.KeyE || BOMB.touchE || ((TOUCH.on || PAD.drive) && hyp(e.vel.x, e.vel.z) < 0.6);
+  if (e.isPlayer) return hyp(e.vel.x, e.vel.z) < 0.6;
   return !e.visible && (e.holdT > 0 || hyp(e.vel.x, e.vel.z) < 0.5); // un bot : au calme (aucun adversaire en vue) et en place
 }
 /* Un bot en mission : les attaquants avant la pose, les défenseurs après. Il oublie les adversaires perdus de vue (lastSeenT, 07b-tactics.js : sinon il les
@@ -262,10 +263,10 @@ function bombStatus() {
   if (!me.alive) return _t('Éliminé, prochaine manche bientôt');
   if (BOMB.phase === 'planted' && BOMB.P) {
     if (att) return _t('Protégez la bombe');
-    return hyp(me.pos.x - BOMB.P.x, me.pos.z - BOMB.P.z) < 2.6 ? _t('Maintenez E pour désamorcer') : _t('Désamorcez la bombe avant qu\u0027elle explose');
+    return hyp(me.pos.x - BOMB.P.x, me.pos.z - BOMB.P.z) < 2.6 ? _t('Restez immobile pour désamorcer') : _t('Désamorcez la bombe avant qu\u0027elle explose');
   }
   if (BOMB.phase !== 'live') return '';
-  if (att) return bombSiteAt(me) ? _t('Maintenez E pour poser la bombe') : BOMB.carrier === me ? _t('Vous portez la bombe') : _t('Attaquez et posez la bombe');
+  if (att) return bombSiteAt(me) ? _t('Restez immobile pour poser la bombe') : BOMB.carrier === me ? _t('Vous portez la bombe') : _t('Attaquez et posez la bombe');
   return _t('Défendez les sites A et B');
 }
 function bombUi() {

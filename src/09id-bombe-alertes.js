@@ -1,14 +1,14 @@
 /* ==========================================================================
-   MODE BOMBE : ALERTES, CHRONO, ICÔNE, SONS ET BOUTON TACTILE (09ib-bombe.js)
+   MODE BOMBE : ALERTES, CHRONO, ICÔNE ET SONS (09ib-bombe.js)
    Bombe plantée : une petite alerte rouge (le site et le chrono qui descend jusqu'à l'explosion, minutes et secondes, puis les dixièmes sous 10 s, qui
-   clignote) et deux bips, dans le coin haut gauche, à droite de la mini-carte (en retrait : elle ne gêne pas la vue), et une icône de bombe en haut de
-   l'image, dans la direction de la bombe, avec sa distance. Bombe désarmée : la même petite alerte, verte, et deux bips. Un tic à chaque demi-seconde de
+   clignote) et un son, dans le coin haut gauche, à droite de la mini-carte (en retrait : elle ne gêne pas la vue), et une icône de bombe en haut de
+   l'image, dans la direction de la bombe, avec sa distance. Bombe désarmée : la même petite alerte, verte, et un son. Un tic à chaque demi-seconde de
    pose ou de désamorçage, un bip de fin de manche (qui monte si l'équipe du joueur gagne). Tout part de l'état de la manche (BOMB.P, BOMB.phase,
-   BOMB.why, BOMB.winner) : les invités en ligne, qui reçoivent cet état de l'hôte (09ie-bombe-reseau.js), voient et entendent donc la même chose. Au
-   tactile, un bouton rond (tenu comme la touche E) apparaît quand le joueur peut poser ou désamorcer.
+   BOMB.why, BOMB.winner) : les invités en ligne, qui reçoivent cet état de l'hôte (09ie-bombe-reseau.js), voient et entendent donc la même chose.
+   Les sons de la pose et du désamorçage sont synthétisés (bombSynth).
    Fichier à part, chargé après 09ib : il enveloppe bombUi, bombHud et bombClear.
    ========================================================================== */
-const BOMB_AL = { el: null, lbl: null, tm: null, mk: null, btn: null, seenP: null, overRound: -1, endRound: -1, until: 0, kind: '', tick: -1, placeAt: 0, mmL: 0, mmT: 0 };
+const BOMB_AL = { el: null, lbl: null, tm: null, mk: null, seenP: null, overRound: -1, endRound: -1, until: 0, kind: '', tick: -1, placeAt: 0, mmL: 0, mmT: 0 };
 /* L'icône : une petite bombe (corps, mèche, étincelle) */
 const BOMB_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px;margin-right:0" aria-hidden="true"><circle cx="11" cy="14" r="7.5" fill="#1c1f1b" stroke="#e8e2d0" stroke-width="1.6"/>'
   + '<path d="M15.5 8.2 18.2 5.4" stroke="#e8e2d0" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="19.2" cy="4.4" r="1.8" fill="#ffb02e"/><circle cx="8.4" cy="11.6" r="1.8" fill="#ffffff" opacity="0.25"/></svg>';
@@ -46,9 +46,39 @@ function bombAlertPlace(now) {
   if (L !== BOMB_AL.mmL) { BOMB_AL.mmL = L; hudStyle(BOMB_AL.el, 'left', L + 'px'); }
   if (T !== BOMB_AL.mmT) { BOMB_AL.mmT = T; hudStyle(BOMB_AL.el, 'top', T + 'px'); }
 }
-/* Deux bips : plantée, deux fois le même (grave et insistant) ; désarmée, un bip qui monte */
+/* Le son d'une action de la bombe, synthétisé (Web Audio : AU.ctx, sortie d'interface uiOut de 05a-sfx.js) et sans fichier.
+   plant : un choc grave, trois bips aigus qui arment, puis un accord qui retombe ; defuse : quatre claquements de relais, puis un carillon
+   qui monte. Faux si le son n'est pas prêt (premier geste du joueur pas encore fait). */
+function bombSynth(kind) {
+  if (!AU || !AU.ready || !AU.ctx) return false;
+  const ctx = AU.ctx, out = uiOut(1), t0 = ctx.currentTime + 0.03;
+  const tone = (type, f0, f1, t, dur, vol) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
+  };
+  const click = (t, vol) => { // un claquement sec : une très courte salve de bruit
+    const n = Math.floor(ctx.sampleRate * 0.025), b = ctx.createBuffer(1, n, ctx.sampleRate), c = b.getChannelData(0);
+    for (let i = 0; i < n; i++) c[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = b; g.gain.value = vol; s.connect(g); g.connect(out); s.start(t);
+  };
+  if (kind === 'plant') {
+    click(t0, 0.9); tone('sine', 150, 48, t0, 0.4, 0.95);
+    for (let i = 0; i < 3; i++) tone('square', 1900, 1900, t0 + 0.08 + i * 0.12, 0.08, 0.3);
+    tone('sawtooth', 520, 500, t0 + 0.5, 0.45, 0.28); tone('sawtooth', 780, 760, t0 + 0.5, 0.45, 0.2);
+  } else {
+    for (let i = 0; i < 4; i++) click(t0 + [0, 0.07, 0.15, 0.24][i], 0.7);
+    tone('sine', 660, 660, t0 + 0.42, 0.25, 0.5); tone('sine', 990, 990, t0 + 0.55, 0.25, 0.5); tone('sine', 1320, 1320, t0 + 0.68, 0.7, 0.55); tone('triangle', 2640, 2640, t0 + 0.68, 0.5, 0.15);
+  }
+  return true;
+}
+/* Le son de la bombe plantée ou désarmée : le son synthétisé et un signal enregistré, qui annonce du côté du joueur (st_capture : bon pour lui,
+   st_lost : mauvais) ; sans son synthétisé, les bips d'avant */
 function bombAlertSound(kind) {
   try {
+    const att = PL.ent.team === BOMB.att, good = kind === 'plant' ? att : !att;
+    if (bombSynth(kind)) { sfxAnnounce(null, good ? 'st_capture' : 'st_lost'); return; }
     if (kind === 'plant') { sfxBeep(1500, 1); setTimeout(() => sfxBeep(1500, 1), 230); } else { sfxBeep(900, 1); setTimeout(() => sfxBeep(1400, 1), 180); }
   } catch (e) { /* les sons ne sont pas prêts : l'alerte reste à l'écran */ }
 }
@@ -83,7 +113,6 @@ function bombAlertTick() {
     hudText(BOMB_AL.lbl, _t('Bombe désamorcée'));
     hudStyle(BOMB_AL.el, 'background', 'rgba(60,150,60,0.88)');
   }
-  bombBtnTick();
 }
 
 /* ---------- L'icône de la bombe posée, en haut de l'image (comme les repères des sites, 09ib : bombMarkAt) ---------- */
@@ -100,35 +129,13 @@ function bombMarkTick() {
   hudText(el.lastChild, `${Math.round(hyp(P.x - camera.position.x, P.z - camera.position.z))} m`);
 }
 
-/* ---------- Le bouton tactile : tenu comme la touche E, visible seulement quand le joueur peut poser ou désamorcer ---------- */
-function bombBtnEl() {
-  if (BOMB_AL.btn && BOMB_AL.btn.isConnected !== false) return BOMB_AL.btn;
-  const b = document.createElement('div'); b.id = 'bombBtn';
-  b.setAttribute('style', 'position:fixed;right:5%;bottom:34%;width:100px;height:100px;border-radius:50%;display:none;align-items:center;justify-content:center;text-align:center;padding:8px;box-sizing:border-box;'
-    + 'font:700 18px/1.05 "Barlow Condensed",sans-serif;letter-spacing:0.04em;color:#fff;background:rgba(200,70,40,0.85);border:3px solid rgba(255,255,255,0.8);touch-action:none;user-select:none;-webkit-user-select:none;z-index:80');
-  const hold = (v) => (e) => { if (e.preventDefault) e.preventDefault(); BOMB.touchE = v; hudStyle(b, 'opacity', v ? '1' : '0.85'); };
-  b.addEventListener('pointerdown', hold(true));
-  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(t, hold(false));
-  document.body.appendChild(b); BOMB_AL.btn = b;
-  return b;
-}
-function bombBtnTick() {
-  if (!TOUCH.on) { if (BOMB_AL.btn) hudStyle(BOMB_AL.btn, 'display', 'none'); return; }
-  const me = PL.ent, P = BOMB.P;
-  const kind = !me.alive ? '' : BOMB.phase === 'live' && me.team === BOMB.att && bombSiteAt(me) ? 'plant'
-    : BOMB.phase === 'planted' && P && me.team !== BOMB.att && hyp(me.pos.x - P.x, me.pos.z - P.z) < 2.6 && Math.abs(me.pos.y - P.y) < 1.6 ? 'defuse' : '';
-  const b = bombBtnEl();
-  hudStyle(b, 'display', kind ? 'flex' : 'none');
-  if (kind) hudText(b, kind === 'plant' ? _t('Poser la bombe') : _t('Désamorcer la bombe')); else BOMB.touchE = false;
-}
-
 try { const f = bombUi; bombUi = function () { f(); bombAlertTick(); }; } catch (e) { console.warn('bombe : bombUi', e); }
 try { const f = bombHud; bombHud = function () { f(); bombMarkTick(); }; } catch (e) { console.warn('bombe : bombHud', e); }
 try {
   const f = bombClear;
   bombClear = function () {
     f();
-    for (const k of ['el', 'mk', 'btn']) if (BOMB_AL[k]) { BOMB_AL[k].remove(); BOMB_AL[k] = null; }
-    BOMB_AL.seenP = null; BOMB_AL.overRound = -1; BOMB_AL.endRound = -1; BOMB_AL.kind = ''; BOMB_AL.tick = -1; BOMB.touchE = false;
+    for (const k of ['el', 'mk']) if (BOMB_AL[k]) { BOMB_AL[k].remove(); BOMB_AL[k] = null; }
+    BOMB_AL.seenP = null; BOMB_AL.overRound = -1; BOMB_AL.endRound = -1; BOMB_AL.kind = ''; BOMB_AL.tick = -1;
   };
 } catch (e) { console.warn('bombe : bombClear (alertes)', e); }
