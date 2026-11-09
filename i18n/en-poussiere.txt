@@ -1,0 +1,10 @@
+# Carte Poussière (src/02yo-poussiere.js)
+Désert, deux sites ⇒ Desert, two sites
+Une ville de pierre ocre sous un ciel sans nuage. Deux sites, trois chemins, et personne ne sait lequel est le bon. ⇒ A town of ochre stone under a cloudless sky. Two sites, three routes, and nobody knows which one is right.
+Tunnel couvert ⇒ Covered tunnel
+Rue du milieu ⇒ Middle street
+Longue ruelle ⇒ Long alley
+Portes du milieu ⇒ Middle doors
+Passage de traverse ⇒ Cross passage
+Place du site B ⇒ Site B square
+Place du site A ⇒ Site A square
