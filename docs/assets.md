@@ -17,6 +17,7 @@ Produite à partir du code par `python3 tools/dev/assets.py`, que `build.py` lan
 | Stratus | `src/02yj-stratus.js` | wood, stone, strata, lawn, dirt, flagstone, humus, canvas, burlap, timber, bark | qwantani_dawn |
 | Simoun | `src/02yl-simoun.js` | stone, wood, sand, dirt, pise, adobe, galets, vase, strata, reg, canvas, laine, steel, burlap, timber, palmbark | quarry_01 |
 | French Dream | `src/02yn-french-dream.js` | plaster, slate, rooftiles, asphalt, concrete, pavers, lawn, pathgravel, wood, paintwood, rollshutter, steel, timber, bark, dirt, sand, canvas, cardboard | kloofendal_48d |
+| poussiere | `src/02yo-poussiere.js` | plaster, plaster2, stone, brick, cobble, pavers, asphalt, rooftiles, wood, shutter, ashlar, concrete, crate, canvas, linge, cardboard, rollshutter, steel, paintwood, burlap, timber, palmbark |  |
 
 ## Prefabs du décor
 
@@ -554,18 +555,18 @@ Photos CC0 ramenées à une plage commune (`tools/build_assets.py`), un fichier 
 | --- | --- | --- | --- | --- |
 | `adobe` | clay_block_wall | Poly Haven | CC0 1.0 | Simoun |
 | `ash` | gravel_stones | Poly Haven | CC0 1.0 | Tephra |
-| `ashlar` | seaworn_sandstone_brick | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Hortus |
-| `asphalt` | Asphalt021 | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Tephra, French Dream |
+| `ashlar` | seaworn_sandstone_brick | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Hortus, poussiere |
+| `asphalt` | Asphalt021 | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Tephra, French Dream, poussiere |
 | `bark` | bark_willow_02 | Poly Haven | CC0 1.0 | Hortus, Stratus, French Dream |
 | `barkw` | pine_bark | Poly Haven | CC0 1.0 | Val-Blanc |
 | `boards` | wooden_planks | Poly Haven | CC0 1.0 | Val-Blanc, Kervénec |
-| `brick` | Bricks066 | ambientCG | CC0 1.0 | Khamsin, Kervénec |
-| `burlap` | hessian_230 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Meltem, Stratus, Simoun |
-| `canvas` | Fabric066 | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, Stratus, Simoun, French Dream |
-| `cardboard` | Cardboard004 | ambientCG | CC0 1.0 | Khamsin, French Dream |
-| `cobble` | cobblestone_floor_001 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem |
-| `concrete` | concrete_wall_009 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, French Dream |
-| `crate` | brown_planks_09 | Poly Haven | CC0 1.0 | Khamsin, Kervénec |
+| `brick` | Bricks066 | ambientCG | CC0 1.0 | Khamsin, Kervénec, poussiere |
+| `burlap` | hessian_230 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Meltem, Stratus, Simoun, poussiere |
+| `canvas` | Fabric066 | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, Stratus, Simoun, French Dream, poussiere |
+| `cardboard` | Cardboard004 | ambientCG | CC0 1.0 | Khamsin, French Dream, poussiere |
+| `cobble` | cobblestone_floor_001 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, poussiere |
+| `concrete` | concrete_wall_009 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, French Dream, poussiere |
+| `crate` | brown_planks_09 | Poly Haven | CC0 1.0 | Khamsin, Kervénec, poussiere |
 | `dirt` | forest_ground_04 | Poly Haven | CC0 1.0 | Stratus, Simoun, French Dream |
 | `drystone` | stone_wall | Poly Haven | CC0 1.0 | Meltem |
 | `flagstone` | stone_pathway | Poly Haven | CC0 1.0 | Hortus, Stratus |
@@ -573,32 +574,32 @@ Photos CC0 ramenées à une plage commune (`tools/build_assets.py`), un fichier 
 | `humus` | forest_leaves_02 | Poly Haven | CC0 1.0 | Hortus, Stratus |
 | `laine` | Fabric031 | ambientCG | CC0 1.0 | Simoun |
 | `lawn` | aerial_grass_rock | Poly Haven | CC0 1.0 | Hortus, Stratus, French Dream |
-| `linge` | rough_linen | Poly Haven | CC0 1.0 | Khamsin, Kervénec, Meltem |
+| `linge` | rough_linen | Poly Haven | CC0 1.0 | Khamsin, Kervénec, Meltem, poussiere |
 | `mecha` | green_metal_rust | Poly Haven | CC0 1.0 |  |
 | `mechadark` | blue_metal_plate | Poly Haven | CC0 1.0 |  |
-| `paintwood` | distressed_painted_planks | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, French Dream |
-| `palmbark` | palm_tree_bark | Poly Haven | CC0 1.0 | Khamsin, Simoun |
+| `paintwood` | distressed_painted_planks | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, French Dream, poussiere |
+| `palmbark` | palm_tree_bark | Poly Haven | CC0 1.0 | Khamsin, Simoun, poussiere |
 | `pathgravel` | gravel_floor_02 | Poly Haven | CC0 1.0 | Hortus, French Dream |
-| `pavers` | Concrete012 | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, Tephra, French Dream |
+| `pavers` | Concrete012 | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Meltem, Tephra, French Dream, poussiere |
 | `pise` | excavated_soil_wall | Poly Haven | CC0 1.0 | Simoun |
-| `plaster` | white_plaster_rough_01 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, French Dream |
-| `plaster2` | clay_plaster | Poly Haven | CC0 1.0 | Khamsin, Kervénec |
+| `plaster` | white_plaster_rough_01 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, French Dream, poussiere |
+| `plaster2` | clay_plaster | Poly Haven | CC0 1.0 | Khamsin, Kervénec, poussiere |
 | `reg` | sandy_gravel_02 | Poly Haven | CC0 1.0 | Simoun |
 | `rock` | rock_face | Poly Haven | CC0 1.0 | Val-Blanc, Kervénec |
-| `rollshutter` | rusty_metal_shutter | Poly Haven | CC0 1.0 | Khamsin, Kervénec, French Dream |
-| `rooftiles` | clay_roof_tiles_03 | Poly Haven | CC0 1.0 | Khamsin, Kervénec, French Dream |
+| `rollshutter` | rusty_metal_shutter | Poly Haven | CC0 1.0 | Khamsin, Kervénec, French Dream, poussiere |
+| `rooftiles` | clay_roof_tiles_03 | Poly Haven | CC0 1.0 | Khamsin, Kervénec, French Dream, poussiere |
 | `rust` | rust_coarse_01 | Poly Haven | CC0 1.0 | Val-Blanc, Kervénec |
 | `sand` | dense_sand | Poly Haven | CC0 1.0 | Meltem, Simoun, French Dream |
-| `shutter` | wood_shutter | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem |
+| `shutter` | wood_shutter | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, poussiere |
 | `slate` | roof_slates_03 | Poly Haven | CC0 1.0 | Val-Blanc, Kervénec, Hortus, French Dream |
 | `snow` | snow_02 | Poly Haven | CC0 1.0 | Val-Blanc |
 | `snowpack` | snow_01 | Poly Haven | CC0 1.0 | Val-Blanc |
-| `steel` | Metal062C | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Tephra, Simoun, French Dream |
-| `stone` | rustic_stone_wall_02 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Stratus, Simoun |
+| `steel` | Metal062C | ambientCG | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Tephra, Simoun, French Dream, poussiere |
+| `stone` | rustic_stone_wall_02 | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Stratus, Simoun, poussiere |
 | `strata` | cliff_side | Poly Haven | CC0 1.0 | Stratus, Simoun |
-| `timber` | rough_wood | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Tephra, Stratus, Simoun, French Dream |
+| `timber` | rough_wood | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Tephra, Stratus, Simoun, French Dream, poussiere |
 | `vase` | mud_cracked_dry_riverbed_002 | Poly Haven | CC0 1.0 | Simoun |
-| `wood` | weathered_brown_planks | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Tephra, Stratus, Simoun, French Dream |
+| `wood` | weathered_brown_planks | Poly Haven | CC0 1.0 | Khamsin, Val-Blanc, Kervénec, Hortus, Meltem, Tephra, Stratus, Simoun, French Dream, poussiere |
 
 ## Surfaces procédurales
 
