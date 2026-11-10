@@ -287,16 +287,16 @@ renderer.shadowMap.enabled = !NO_SHADOWS;
    grass    brins d'herbe des pelouses (02nb-gazon.js) : part des brins dessinés, portée (m), fin du gabarit détaillé (m) ;
    lean     profil allégé (Basse, Minimale) : textures réduites, ni relief par parallaxe ni paillettes, une seule cascade d'ombre avec les petits objets. */
 const QUALITY = {
-  high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.6, msaa: 2, shadow: 1536, bloom: true, rays: false, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] },
-  medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.6, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] },
+  high: { label: _t('Haute'), pr: 1.5, scaleMin: 0.75, msaa: 2, shadow: 1536, bloom: true, rays: false, lights: 4, lodPx: 110, detail: 45, scatter: 28, pom: [12, 10, 16, 1], grass: [0.55, 14, 5] },
+  medium: { label: _t('Moyenne'), pr: 1.0, scaleMin: 0.75, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 4, lodPx: 140, detail: 36, scatter: 24, pom: [8, 6, 10, 0.85], grass: [0.45, 12, 5] },
   // palier réservé au mode automatique : sur les puces intégrées, l'anticrénelage 2x coûte nettement moins cher
   // en bande passante que le 4x et laisse une résolution plus haute, avant de devoir passer en Basse
-  medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.65, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] },
-  low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.55, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 22, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 8, 3], lean: true },
+  medium2: { label: _t('Moyenne allégée'), pr: 1.0, scaleMin: 0.75, msaa: 2, shadow: 1024, bloom: false, rays: false, lights: 3, lodPx: 150, detail: 30, scatter: 20, pom: [0, 0, 1, 0], grass: [0.35, 10, 4] },
+  low: { label: _t('Basse'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.65, msaa: 0, shadow: GFX_SAFE ? 512 : 1024, bloom: false, rays: false, lights: COARSE || GFX_SAFE ? 0 : 2, lodPx: 180, detail: 22, scatter: 16, pom: [0, 0, 1, 0], grass: [0.3, 8, 3], lean: true },
   // pour les machines trop faibles pour Basse (Intel HD 3000, vieux téléphones) : en plus de Basse, sans éclairs de tir ni gazon, menus détails et
   // dispersion au sol plus proches, modèle détaillé des soldats de plus près, plancher de résolution plus bas ; lancé ainsi, sans ombres calculées
   // (le soleil garde son ombre, cuite dans l'éclairage), sans pré-passe, textures au tiers (ULTRA)
-  ultra: { label: _t('Minimale'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.5, msaa: 0, shadow: 512, bloom: false, rays: false, lights: 0, lodPx: 260, detail: 18, scatter: 10, pom: [0, 0, 1, 0], grass: null, lean: true },
+  ultra: { label: _t('Minimale'), pr: GFX_SAFE ? 0.6 : 0.75, scaleMin: 0.60, msaa: 0, shadow: 512, bloom: false, rays: false, lights: 0, lodPx: 260, detail: 18, scatter: 10, pom: [0, 0, 1, 0], grass: null, lean: true },
 };
 /* Échelle du mode automatique, du plus beau au plus léger : [profil, plus petit et plus grand facteur de résolution].
    On renonce d'abord à ce qui se voit le moins (anticrénelage 4x puis 2x) ; la résolution ne descend qu'ensuite, par
@@ -1463,7 +1463,7 @@ function stepQuality(dir, step = 0.05) {
    visé : 75 % du budget), de 5 à 20 % ; sans mesure, 10 % pour des images très en retard, 5 % sinon */
 function dynDown(med) {
   const b = frameBudget();
-  if (DYN.gpu > b * 0.85) return clamp(RQ.scale * (1 - Math.sqrt((b * 0.75) / DYN.gpu)), 0.05, 0.2);
+  if (DYN.gpu > b * 0.92) return clamp(RQ.scale * (1 - Math.sqrt((b * 0.80) / DYN.gpu)), 0.03, 0.12);
   return med > b * 1.4 ? 0.1 : 0.05;
 }
 function updateDynRes(now, intervalMs, cpuMs) {
@@ -1478,8 +1478,8 @@ function updateDynRes(now, intervalMs, cpuMs) {
   const budget = frameBudget(); // la période de la limite de cadence, si elle est plus longue
   // un GPU à 95 % du budget tient 60 images par seconde mais remplit la file d'images (latence de la souris) et décroche au moindre pic : au-delà de 85 %
   // (seulement si l'écran n'est pas bien plus rapide que 60 Hz), on baisse la résolution ; on ne remonte qu'à moins de 60 % (hystérésis, voir roomy)
-  const gpuHot = DYN.gpu > budget * 0.85 && med > budget * 0.9;
-  const slow = med > budget * 1.12 || p90 > budget * 1.6 || gpuHot;
+  const gpuHot = DYN.gpu > budget * 0.92 && med > budget * 0.95;
+  const slow = med > budget * 1.25 || p90 > budget * 1.9 || gpuHot;
   // le GPU n'est le goulot que si son temps mesuré explique l'essentiel de l'intervalle entre deux images : à 20 images par seconde pour 14 ms de GPU,
   // baisser la qualité n'y changerait rien
   const gpuBound = DYN.gpu ? DYN.gpu > budget * 0.8 && DYN.gpu > med * 0.55 : DYN.cpu < med * 0.7;
