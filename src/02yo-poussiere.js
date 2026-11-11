@@ -5,7 +5,8 @@
    sacs de sable, voitures, palmiers et barrières de béton sont dans PQ.props (case « colonne,ligne »). Modifier le dessin modifie la carte : les
    bâtiments, le tunnel et les murets en sont tirés (pqRects), les collisions suivent, la navigation des bots aussi.
    OUEST « Tunnel »  : ruelle couverte de 36 m, qui débouche sur la place du site B.
-   CENTRE « Rue »    : rue pavée, goulet de deux cases au milieu (les Portes du milieu), qui monte à la cour de Bravo.
+   CENTRE « Rue »    : rue pavée coupée par deux murs à portail (un à l'est au nord, un à l'ouest au sud) autour d'une petite place à pilier central
+                       (les Portes du milieu) : on ne voit jamais d'un bout à l'autre, il faut passer les deux portails en zigzag.
    EST « Longue »    : longue ruelle à lignes de vue, qui débouche sur la place du site A.
    Deux passages de traverse relient la rue à l'ouest et à l'est. La cour de Bravo a une porte sur chaque place.
    Axe long nord-sud (Z). Alpha au sud (+Z), Bravo au nord (-Z) ; les apparitions de Bravo sont le miroir de celles d'Alpha.
@@ -27,21 +28,21 @@ const PQ = {
     '..........#........#..........',
     '...########......########.....',
     '...########......########.....',
-    '...########..L...########.....',
-    '...########..L...########.....',
+    '...########......########.....',
+    '...#############.########.....',
     'RRR########......########.....',
     'RRR########...................',
     'RRR########...................',
-    'RRR##########..##########..L..',
-    'RRR##########..##########..L..',
+    'RRR########..##..########..L..',
+    'RRR########..##..########..L..',
     'RRR########......########..L..',
-    'RRR########..L...########.....',
-    'RRR########..L...########.....',
+    'RRR########......########.....',
+    'RRR########.#############.....',
     'RRR..............########.....',
     'RRR..............########.....',
     'RRR########......########.....',
-    'RRR########...L..########.....',
-    '...########...L..########.....',
+    'RRR########......########.....',
+    '...########......########.....',
     '...########......########.....',
     '...########......########.....',
     '..............................',
@@ -52,7 +53,7 @@ const PQ = {
     '..............................',
     '..............................'
   ],
-  props: { '12,0': 'p', '17,0': 'p', '4,3': 'p', '21,3': 'p', '2,4': 'c', '3,4': 'c', '28,4': 'c', '12,5': 's', '17,5': 's', '24,5': 'c', '25,5': 'c', '25,6': 'c', '5,7': 'c', '6,7': 'c', '5,8': 'c', '1,9': 'c', '22,9': 'c', '8,10': 'c', '22,10': 'c', '6,11': 's', '24,11': 's', '2,12': 'o', '28,12': 'o', '27,15': 'c', '1,21': 'c', '27,23': 'c', '1,25': 'o', '26,26': 'v', '13,29': 'c', '5,31': 'j', '6,31': 'j', '12,31': 's', '16,31': 's', '23,31': 'j', '24,31': 'j', '7,33': 'v', '22,34': 'v', '2,35': 'p', '27,35': 'p' },
+  props: { '12,0': 'p', '17,0': 'p', '4,3': 'p', '21,3': 'p', '2,4': 'c', '3,4': 'c', '28,4': 'c', '12,5': 's', '17,5': 's', '24,5': 'c', '25,5': 'c', '25,6': 'c', '5,7': 'c', '6,7': 'c', '5,8': 'c', '1,9': 'c', '22,9': 'c', '8,10': 'c', '22,10': 'c', '6,11': 's', '24,11': 's', '2,12': 'o', '28,12': 'o', '15,13': 's', '27,15': 'c', '12,17': 'c', '1,21': 'c', '15,21': 'c', '27,23': 'c', '1,25': 'o', '26,26': 'v', '12,27': 'o', '13,29': 'c', '5,31': 'j', '6,31': 'j', '12,31': 's', '16,31': 's', '23,31': 'j', '24,31': 'j', '7,33': 'v', '22,34': 'v', '2,35': 'p', '27,35': 'p' },
 };
 /* Une case : hors du dessin, c'est l'enceinte (un mur) */
 function pqCh(c, r) { return c < 0 || r < 0 || c >= PQ.W || r >= PQ.H ? '#' : PQ.rows[r][c]; }
@@ -96,7 +97,7 @@ function pqPoi() {
     if (!pqFree(c, r) || PQ.props[c + ',' + r]) continue;
     out.push([pqCx(c), 0, pqCz(r), lane(pqCx(c))]);
   }
-  for (const [c, r] of [[10, 6], [10, 7], [19, 6], [19, 7], [13, 19], [14, 19], [13, 20], [14, 20], [3, 25], [9, 24], [18, 17], [23, 18]]) out.push([pqCx(c), 0, pqCz(r), lane(pqCx(c)), 1]);
+  for (const [c, r] of [[10, 6], [10, 7], [19, 6], [19, 7], [16, 15], [11, 23], [12, 19], [15, 19], [3, 25], [9, 24], [18, 17], [23, 18]]) out.push([pqCx(c), 0, pqCz(r), lane(pqCx(c)), 1]);
   return out;
 }
 const PQ_BASE = typeof ATMO_DEFAULT !== 'undefined' ? ATMO_DEFAULT : {}; // (garde : un nom qui changerait ne doit pas empêcher le jeu de se charger)
@@ -124,8 +125,8 @@ MAP_DEFS.poussiere = {
   splat: { x0: -72, z0: -88, w: 144, d: 176, ppm: 4 },
   spawns: PQ_SPAWNS,
   poi: pqPoi(),
-  // domination : A et C dans la rue, à l'approche des bases ; B au milieu, dans les Portes
-  dom: [[-1.5, 31.5], [-1.5, 1.5], [-1.5, -31.5]],
+  // domination : A et C dans la rue, à l'approche des bases ; B au milieu, dans la place des Portes (à gauche du pilier)
+  dom: [[-1.5, 31.5], [-7.5, 1.5], [-1.5, -31.5]],
   // mode Pose de bombe (09ib-bombe.js) : un site au centre de chaque place, au nord (côté de Bravo)
   bomb: [[30, -36], [-30, -36]],
   lane: (x) => (x < -12 ? 'L' : x > 6 ? 'E' : 'M'),
@@ -137,7 +138,7 @@ MAP_DEFS.poussiere = {
   zones: [
     [_t('Base Alpha'), -45, 45, 34.5, 57], [_t('Base Bravo'), -12, 12, -57, -34.5],
     [_t('Tunnel couvert'), -45, -36, -9, 30], [_t('Rue du milieu'), -12, 6, -34.5, 34.5], [_t('Longue ruelle'), 27, 45, -22, 34.5],
-    [_t('Portes du milieu'), -12, 6, 1.5, 7.5], [_t('Passage de traverse'), -36, -12, 15, 21], [_t('Passage de traverse'), 6, 27, -6, 0],
+    [_t('Portes du milieu'), -12, 6, -7.5, 13.5], [_t('Passage de traverse'), -36, -12, 15, 21], [_t('Passage de traverse'), 6, 27, -6, 0],
     [_t('Place du site B'), -45, -15, -51, -21], [_t('Place du site A'), 15, 45, -51, -21],
   ],
   atmo: ATMO_POUSSIERE,
